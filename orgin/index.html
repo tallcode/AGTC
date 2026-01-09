@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGTC_anyGTa_2lite Web Utility</title>
+    <style>
+        body { font-family: monospace; background-color: #1e1e1e; color: #cccccc; padding: 20px; }
+        h1 { color: #dcdcdc; }
+        .input-group { margin-bottom: 10px; }
+        label { display: inline-block; width: 240px; white-space: nowrap; text-align: right; }
+        input[type="number"] { width: 100px; padding: 5px; background: #3c3c3c; color: #fff; border: 1px solid #555; }
+        input[type="file"] { color: #fff; }
+        button { padding: 10px 20px; background-color: #007acc; color: white; border: none; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background-color: #0098ff; }
+        #results { margin-top: 20px; font-family: 'Courier New', Courier, monospace; }
+        
+        /* Mimic the BASIC output colors */
+        .res-table { border-collapse: collapse; width: 100%; max-width: 900px; }
+        .res-table th, .res-table td { padding: 5px; text-align: right; }
+        .res-table th { color: #f1c40f; border-bottom: 1px solid #555; } /* Yellow */
+        .res-table td { color: #f1c40f; } /* Yellow */
+        .res-header { color: #ffffff; margin-bottom: 30px; }
+        .res-header > div { margin-bottom: 10px; }
+        .res-warning { color: #e74c3c; } /* Red */
+        .res-info { color: #3498db; } /* Blue */
+        .res-gta-neg { color: #ff00ff; } /* Fuchsia/Magenta for errors? Basic uses 13 */
+        
+        .val-avg { color: #ffffff; }
+        .val-sky { color: #3498db; }
+        .val-earth { color: #3498db; }
+        .val-loss { color: #ffffff; }
+
+        .row-highlight td { color: #e74c3c !important; font-weight: bold; } /* Red for 30 deg */
+    </style>
+</head>
+<body>
+
+    <h1>AGTC_anyGTa_2lite</h1>
+
+    <div class="input-group">
+        <label for="skyTemp">Sky Temperature (K):</label>
+        <input type="number" id="skyTemp" value="15" step="0.1">
+    </div>
+
+    <div class="input-group">
+        <label for="earthTemp">Earth Temperature (K):</label>
+        <input type="number" id="earthTemp" value="290" step="0.1">
+    </div>
+
+    <div class="input-group">
+        <label for="fileInput">Select FFtab file (.txt):</label>
+        <input type="file" id="fileInput" accept=".txt">
+    </div>
+
+    <div>
+        <button onclick="processFile()">Calculate</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const PI = Math.PI;
+        let tot_dB = []; // 181 x 361
+
+        function initArray() {
+            tot_dB = new Array(181);
+            for(let i=0; i<181; i++) {
+                tot_dB[i] = new Float64Array(361).fill(-100.0);
+            }
+        }
+
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const skyTemp = parseFloat(document.getElementById('skyTemp').value);
+            const earthTemp = parseFloat(document.getElementById('earthTemp').value);
+
+            if (!fileInput.files.length) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const text = e.target.result;
+                try {
+                    parseData(text);
+                    calculate(skyTemp, earthTemp, file.name);
+                } catch (err) {
+                    alert("Error processing file: " + err.message);
+                    console.error(err);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseData(text) {
+            initArray();
+            const lines = text.split(/\r?\n/);
+            
+            // State
+            let currentVariable = -1; // The angle value from the header
+            let sliceMode = null; // 'phi_fixed' (Deg is Theta) or 'theta_fixed' (Deg is Phi)
+            
+            // Helper for comma decimals
+            const parseVal = (s) => parseFloat(s.replace(',', '.'));
+
+            // Regexes - Updated to allow commas
+            // Case 1: "Theta Pattern   Phi angle = 0 deg"  => Phi is fixed, data varies by Theta
+            const regexPhiHeader = /Phi angle\s*=\s*([-\d\.,]+)/;
+            
+            // Case 2: "Phi Pattern   Theta angle = 0 deg" => Theta is fixed, data varies by Phi
+            const regexThetaHeader = /Theta angle\s*=\s*([-\d\.,]+)/;
+
+            // Case 3: "Azimuth Pattern   Elevation angle = 23 deg" => Elevation is fixed, data varies by Azimuth (Phi)
+            // Note: EZNEC Elevation = 90 - Theta (usually).
+            const regexElevationHeader = /Elevation angle\s*=\s*([-\d\.,]+)/;
+
+            // Matches: Deg, V dB, H dB, Tot dB. Handles negative numbers.
+            // Example: "  0    -7.86    -42.28     -7.85"
+            // Example: "  0    -7,86    -42,28     -7,85"
+            const regexData = /^\s*(\d+)\s+([-\d\.,]+)\s+([-\d\.,]+)\s+([-\d\.,]+)/;
+
+            for (let line of lines) {
+                // Check headers
+                const phiMatch = line.match(regexPhiHeader);
+                if (phiMatch) {
+                    currentVariable = parseVal(phiMatch[1]);
+                    sliceMode = 'phi_fixed'; // Based on FFtab.txt
+                    continue;
+                }
+
+                const thetaMatch = line.match(regexThetaHeader);
+                if (thetaMatch) {
+                    currentVariable = parseVal(thetaMatch[1]);
+                    sliceMode = 'theta_fixed'; // Based on FFtab1.txt
+                    continue;
+                }
+
+                const elevMatch = line.match(regexElevationHeader);
+                if (elevMatch) {
+                    // Convert Elevation to Theta: Theta = 90 - Elevation
+                    // Treat as theta_fixed because data varies by Azimuth (Phi)
+                    currentVariable = 90.0 - parseVal(elevMatch[1]);
+                    sliceMode = 'theta_fixed'; 
+                    continue;
+                }
+
+                // Check for Data line
+                const dataMatch = line.match(regexData);
+                if (dataMatch && sliceMode) {
+                    let deg = parseInt(dataMatch[1]);
+                    let val = parseVal(dataMatch[4]); // Tot dB is 4th capture group
+
+                    let theta, phi;
+
+                    if (sliceMode === 'phi_fixed') {
+                        // In this mode, header specified Phi. 
+                        // The 'Deg' column is Theta (Pattern is Theta Pattern).
+                        // FFtab.txt logic: Deg can go 0..360.
+                        // 0..180 => Theta=Deg, Phi=currentVariable
+                        // 181..359 => Theta=360-Deg, Phi=(currentVariable+180)%360
+                        
+                        let fixedPhi = currentVariable;
+                        
+                        if (deg <= 180) {
+                            theta = deg;
+                            phi = fixedPhi;
+                        } else {
+                            theta = 360 - deg;
+                            phi = (fixedPhi + 180) % 360;
+                        }
+
+                    } else if (sliceMode === 'theta_fixed') {
+                        // In this mode, header specified Theta.
+                        // The 'Deg' column is Phi (Pattern is Phi Pattern).
+                        // FFtab1.txt logic: Deg is Phi (0..360).
+                        
+                        theta = currentVariable;
+                        phi = deg;
+                    }
+
+                    // Store Data
+                    // Safety mapping and bounds check
+                    // Ensure Phi is 0..360 (wrap 360 to 0 if needed or keep 360 as alias)
+                    // Our array logic handles phi 0..360 index directly for trapezoidal consistency
+                    
+                    if (theta >= 0 && theta <= 180 && phi >= 0 && phi <= 360) {
+                        // Round to nearest integer indices just in case inputs are float
+                        let t_idx = Math.round(theta);
+                        let p_idx = Math.round(phi);
+                        
+                        if (t_idx < 181 && p_idx < 361) {
+                             tot_dB[t_idx][p_idx] = val;
+                             
+                             // Handle 360 wrap consistency
+                             if (p_idx === 0) tot_dB[t_idx][360] = val;
+                             if (p_idx === 360) tot_dB[t_idx][0] = val;
+                        }
+                    }
+                }
+            }
+        }
+
+        function calculate(T_sky, T_earth, fileName) {
+            // Arrays for integration
+            // element[181 * phi + theta] 
+            // We'll Use a flattened or 2D structure. 2D is easier in JS: element[phi][theta]
+            // Note BASIC used flattened array index = 181 * phi + theta + 1
+            // We will use 0-based: element[phi][theta], theta 0..180 (181), phi 0..360 (361)
+            
+            let element = new Array(361);
+            let maxGainVal = -1000;
+            let maxPhi = 0;
+            let maxTheta = 0;
+            const dThetaRad = (PI / 180);
+            const dPhiRad = (PI / 180); // Step is 1 deg
+            const solidAngleFactor = dThetaRad * dPhiRad; // not strictly used if we follow BASIC's element formula which separates terms
+
+            // Precompute elements
+            for (let p = 0; p <= 360; p++) {
+                element[p] = new Float64Array(181);
+                for (let t = 0; t <= 180; t++) {
+                    let db = tot_dB[t][p];
+                    if (db > maxGainVal) {
+                        maxGainVal = db;
+                        maxPhi = p;
+                        maxTheta = t;
+                    }
+                    // BASIC Formula: 10^(Tot_dB/10) * SIN(theta) * (PI/180)^2
+                    let linear = Math.pow(10, db / 10.0);
+                    let sinTheta = Math.sin(t * PI / 180.0);
+                    element[p][t] = linear * sinTheta * Math.pow(PI / 180.0, 2);
+                }
+            }
+            
+            // Subroutine: Trapezoidal Sums
+            // Inputs: begin_phi, end_phi, begin_theta, end_theta (Function of Phi? No in BASIC it's constant for the block)
+            // Wait, BASIC:
+            // FOR phi = begin_phi TO end_phi
+            //    FOR theta = begin_theta TO end_theta ...
+            // Wait, for Alpha rotation, limits depend on alpha?
+            // "Sky1: az=0..90, el=90..-alpha (theta 0 to 90+alpha)"
+            // Yes, standard limits.
+
+            function trapezoidal_sums(b_phi, e_phi, b_theta, e_theta) {
+                // b_theta/e_theta are numbers here (fixed for the region)
+                // In BASIC logic:
+                // Sum(phi) = Trapezoidal sum over theta
+                // Sum_Sum = Trapezoidal sum over phi of Sum(phi)
+                
+                let sum_phi = new Float64Array(361);
+                
+                for (let p = b_phi; p <= e_phi; p++) {
+                    let s = 0;
+                    // Inner loop: theta from b_theta+1 to e_theta-1
+                    for (let t = b_theta + 1; t <= e_theta - 1; t++) {
+                         s += element[p][t];
+                    }
+                    // Add endpoints / 2
+                    s += element[p][b_theta] / 2.0;
+                    s += element[p][e_theta] / 2.0;
+                    sum_phi[p] = s;
+                }
+
+                let sum_sum = 0;
+                // Outer loop: phi from b_phi+1 to e_phi-1
+                for (let p = b_phi + 1; p <= e_phi - 1; p++) {
+                    sum_sum += sum_phi[p];
+                }
+                // Add endpoints / 2
+                sum_sum += sum_phi[b_phi] / 2.0;
+                sum_sum += sum_phi[e_phi] / 2.0;
+                
+                return sum_sum;
+            }
+
+            // Part 3: Calculate Avg Gain at Alpha 0
+            // Sum Sky (0-90 theta) + Sum Earth (90-180 theta) for full sphere
+            // BASIC does this by calling `areas` with alpha=0.
+            
+            function calculate_regions(alpha) {
+                // Sky1: 0-90 phi, 0 to 90+alpha theta
+                let sky1 = trapezoidal_sums(0, 90, 0, 90 + alpha);
+                // Sky2: 270-360 phi, 0 to 90+alpha theta
+                let sky2 = trapezoidal_sums(270, 360, 0, 90 + alpha);
+                // Sky3: 90-270 phi, 0 to 90-alpha theta
+                let sky3 = trapezoidal_sums(90, 270, 0, 90 - alpha);
+                
+                let sum_Sky = sky1 + sky2 + sky3;
+
+                // Earth1: 0-90 phi, 90+alpha to 180 theta
+                let earth1 = trapezoidal_sums(0, 90, 90 + alpha, 180);
+                // Earth2: 270-360 phi, 90+alpha to 180 theta
+                let earth2 = trapezoidal_sums(270, 360, 90 + alpha, 180);
+                // Earth3: 90-270 phi, 90-alpha to 180 theta
+                let earth3 = trapezoidal_sums(90, 270, 90 - alpha, 180);
+
+                let sum_Earth = earth1 + earth2 + earth3;
+                
+                return { sum_Sky, sum_Earth };
+            }
+
+            // Calculate Avg Gain (Alpha = 0)
+            const res0 = calculate_regions(0);
+            const sum_Total_0 = res0.sum_Sky + res0.sum_Earth;
+            const avg_gain_num = sum_Total_0 / (4 * PI);
+            const avg_gain_dB = 10 * Math.log10(avg_gain_num);
+            
+            const loss_dB = -avg_gain_dB;
+            const loss_temperature = 290 * ((1.0 / avg_gain_num) - 1.0);
+            
+            // Generate HTML output
+            let html = `<div class="res-header">
+                <div>Average Gain (AG, caution: rounded display!) = <span class="val-avg">${avg_gain_num.toFixed(4)}</span> (/) = <span class="val-avg">${avg_gain_dB.toFixed(2)}</span> dBi</div>
+                <div>Max Gain = <span class="val-avg">${maxGainVal.toFixed(2)}</span> dBi at azimuth = ${maxPhi} degree(s) and elevation = ${90 - maxTheta} degree(s)</div>
+                <div style="display:flex; gap:20px">
+                     <span class="val-sky">T_sky = ${T_sky.toFixed(2)} K</span>
+                     <span class="val-loss">T_loss_IN = ${loss_temperature.toFixed(3)} K</span>
+                     <span class="val-earth">T_earth = ${T_earth.toFixed(2)} K</span>
+                </div>
+            </div>`;
+
+            html += `<table class="res-table">
+                <thead>
+                    <tr>
+                        <th>Alpha (deg.)</th>
+                        <th>T_pattern (K)</th>
+                        <th>T_loss_OUT (K)</th>
+                        <th>T_total (K)</th>
+                        <th>G/Ta (dB)</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            // Loop Alpha
+            for (let alpha = 0; alpha <= 90; alpha += 5) {
+                const res = calculate_regions(alpha);
+                const sumS = res.sum_Sky;
+                const sumE = res.sum_Earth;
+                
+                const T_pattern = (T_sky * sumS + T_earth * sumE) / (sumS + sumE);
+                const T_total = (T_pattern - 290) * avg_gain_num + 290;
+                
+                let G_Ta_dB;
+                let G_Ta_Str;
+                let rowClass = "";
+
+                if (T_total <= 0) {
+                    G_Ta_Str = "-99.999 *";
+                    // Error case
+                } else {
+                    G_Ta_dB = maxGainVal - 10 * Math.log10(T_total);
+                    G_Ta_Str = G_Ta_dB.toFixed(3);
+                }
+
+                if (alpha === 30) rowClass = "row-highlight";
+                
+                const T_loss_out = loss_temperature * avg_gain_num;
+
+                const formatNum = (n) => (n >= 0 ? "+ " : "- ") + Math.abs(n).toFixed(3);
+
+                html += `<tr class="${rowClass}">
+                    <td>${alpha}</td>
+                    <td>${T_pattern.toFixed(3)}</td>
+                    <td>${formatNum(T_loss_out)}</td>
+                    <td>${formatNum(T_total)}</td>
+                    <td>${formatNum(G_Ta_dB)}</td>
+                </tr>`;
+            }
+
+            html += `</tbody></table>`;
+            
+            // Warnings
+            if (avg_gain_num >= 1.001) {
+                 html += `<div class="res-gta-neg" style="margin-top:10px">Computed AG >= 1.001, G/Ta corrections may be needed</div>`;
+            }
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+    </script>
+</body>
+</html>
