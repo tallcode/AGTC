@@ -8,13 +8,7 @@ export interface InputParams {
 export interface ParsedData {
   /** 181 rows (theta 0..180), each 361 cols (phi 0..360) */
   tot_dB: Float64Array[]
-  metadata: {
-    sliceMode: 'phi_fixed' | 'theta_fixed' | 'unknown'
-    stepSize: number
-    isFull360: boolean
-    firstVariable: string
-    thetaCount: number // How many theta steps covering 0-180
-  }
+  sliceMode: 'phi' | 'theta' | 'unknown'
 }
 
 export interface CalculationResultRow {

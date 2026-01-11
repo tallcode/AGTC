@@ -1,6 +1,6 @@
 import { calculateMetrics } from './calculator'
+import { validateFFTable } from './check'
 import { showDialog } from './components/dialog/index'
-import { validateFFTable } from './data-validation'
 import { renderResults } from './display'
 import { parseFFtab } from './parser'
 import { getAndValidateInputs, validateFileSelection } from './validation'
