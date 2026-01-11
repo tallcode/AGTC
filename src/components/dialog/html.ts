@@ -44,7 +44,7 @@ export class AppDialog extends LitElement {
     return html`
       <dialog @close=${this._onClose}>
         <form method="dialog">
-          <header><h3>${this._title}</h3></header>
+          <header>${this._title}</header>
           <article><pre>${this._message}</pre></article>
           <footer>
             <button value="ok">OK</button>

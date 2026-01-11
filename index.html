@@ -8,67 +8,66 @@
   </head>
   <body>
     <h1>AGTC Web Utility</h1>
-    <h2>Based on "AGTC_anyGTa_2lite"</h2>
-    <h2>G/Ta computation from Far Field Table by F5FOD with DG7YBN</h2>
-
+    <h2>Based on "AGTC_anyGTa_2lite"<br/>G/Ta computation from Far Field Table by F5FOD with DG7YBN</h2>
+    
+    <main>
+      <app-field 
+        name="skyTemp" 
+        label="Sky Temperature" 
+        memo="K" 
+        required 
+        min="0" 
+        max="9999999" 
+        type="number" 
+        value="20" 
+        step="1">
+      </app-field>
+    
+      <app-field 
+        name="earthTemp" 
+        label="Earth Temperature" 
+        memo="K" 
+        required 
+        min="0" 
+        max="9999999" 
+        type="number" 
+        value="350" 
+        step="1">
+      </app-field>
+    
     <app-field 
-      name="skyTemp" 
-      label="Sky Temperature" 
-      memo="K" 
-      required 
-      min="0" 
-      max="9999999" 
-      type="number" 
-      value="20" 
-      step="1">
-    </app-field>
-	
+        name="translineLoss" 
+        label="Trans. Line Loss" 
+        memo="dB" 
+        required 
+        min="0" 
+        type="number" 
+        value="0.20" 
+        step="0.01">
+      </app-field>
+    
     <app-field 
-      name="earthTemp" 
-      label="Earth Temperature" 
-      memo="K" 
-      required 
-      min="0" 
-      max="9999999" 
-      type="number" 
-      value="350" 
-      step="1">
-    </app-field>
-	
-	<app-field 
-      name="translineLoss" 
-      label="Trans. Line Loss" 
-      memo="dB" 
-      required 
-      min="0" 
-      type="number" 
-      value="0.20" 
-      step="0.01">
-    </app-field>
-	
-	<app-field 
-      name="ReceiverNF" 
-      label="Receiver NF" 
-      memo="dB" 
-      required 
-      min="0" 
-      type="number" 
-      value="0.75" 
-      step="0.01">
-    </app-field>
+        name="ReceiverNF" 
+        label="Receiver NF" 
+        memo="dB" 
+        required 
+        min="0" 
+        type="number" 
+        value="0.75" 
+        step="0.01">
+      </app-field>
 
-    <app-field 
-      name="fileInput" 
-      label="Far Field Table (FFtab) file" 
-      memo=".txt" 
-      required 
-      type="file" 
-      accept=".txt">
-    </app-field>
+      <app-field 
+        name="fileInput" 
+        label="Far Field Table (FFtab) file" 
+        memo=".txt" 
+        required 
+        type="file" 
+        accept=".txt">
+      </app-field>
 
-    <div>
-        <button id="calcBtn">Calculate</button>
-    </div>
+      <div><button id="calcBtn">Calculate</button></div>
+    </main>
 
     <agtc-output id="agtc-output"></agtc-output>
     <script type="module" src="/src/main.ts"></script>

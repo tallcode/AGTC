@@ -24,7 +24,7 @@ export function validateFFTable(data: FFTable): ValidationResult {
       validator(data)
     }
     catch (e: any) {
-      console.error(e)
+      // console.error(e)
       const msg = typeof e === 'string' ? e : e.message || String(e)
       return {
         isValid: false,
