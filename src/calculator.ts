@@ -119,8 +119,6 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
       G_Ta_Str = formatNum(G_Ta_dB)
     }
 
-    const isHighlight = (alpha === 30)
-
     const T_loss = loss_temperature * avg_gain_num
 
     rows.push({
@@ -130,7 +128,6 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
       T_total,
       G_Ta_dB,
       G_Ta_Str,
-      isHighlight,
     })
 
     // System calculation at 30 deg

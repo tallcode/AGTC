@@ -3,6 +3,7 @@ export interface InputParams {
   earthTemp: number
   translineLoss: number
   receiverNF: number
+  file: File
 }
 
 export interface ParsedData {
@@ -18,7 +19,6 @@ export interface CalculationResultRow {
   T_total: number
   G_Ta_dB: number
   G_Ta_Str: string
-  isHighlight: boolean
 }
 
 export interface CalculationResult {

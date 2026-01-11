@@ -33,7 +33,7 @@ export class DataTable extends LitElement {
         </thead>
         <tbody>
           ${this.data.map(row => html`
-            <tr class="${row.isHighlight ? 'highlight' : ''}">
+            <tr class="${row.alpha === 30 ? 'highlight' : ''}">
               <td>${row.alpha}</td>
               <td>${row.T_pattern.toFixed(3)}</td>
               <td>${this.formatNum(row.T_loss)}</td>

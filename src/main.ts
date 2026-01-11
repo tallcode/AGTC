@@ -1,11 +1,38 @@
+import type { InputParams } from './types'
 import { calculateMetrics } from './calculator'
-import { validateFFTable } from './check'
 import { showDialog } from './components/dialog/index'
 import { renderResults } from './display'
 import { parseFFtab } from './parser'
-import { getAndValidateInputs, validateFileSelection } from './validation'
+import { validateFFTable } from './validation'
 import './components/field/index'
 import './style.css'
+
+function getAndValidateInputs(): InputParams | null {
+  const skyTempField = document.querySelector('app-field[name="skyTemp"]') as any
+  const earthTempField = document.querySelector('app-field[name="earthTemp"]') as any
+  const translineLossField = document.querySelector('app-field[name="translineLoss"]') as any
+  const receiverNFField = document.querySelector('app-field[name="ReceiverNF"]') as any
+  const fileField = document.querySelector('app-field[name="fileInput"]') as any
+
+  if ([
+    skyTempField,
+    earthTempField,
+    translineLossField,
+    receiverNFField,
+    fileField,
+  ].some(f => !f?.validate?.())
+  ) {
+    return null
+  }
+
+  return {
+    skyTemp: skyTempField?.parsedValue,
+    earthTemp: earthTempField?.parsedValue,
+    translineLoss: translineLossField?.parsedValue,
+    receiverNF: receiverNFField?.parsedValue,
+    file: fileField?.parsedValue,
+  }
+}
 
 function readFile(uploadedFile: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -16,35 +43,25 @@ function readFile(uploadedFile: File): Promise<string> {
   })
 }
 
-async function processFile() {
-  // const fileInput = document.getElementById('fileInput') as HTMLInputElement // Now handled via component query in validateFileSelection
+async function main() {
   const params = getAndValidateInputs()
-
-  // validateFileSelection will look up the component
-  const file = validateFileSelection(null as any)
-
-  if (!params || !file) {
+  if (!params) {
     return
   }
   try {
-    const text = await readFile(file)
+    const text = await readFile(params.file)
     const parsedData = parseFFtab(text)
-
-    // Validate Parsed Data
     const validation = validateFFTable(parsedData)
-
     if (!validation.isValid) {
       renderResults(null)
       await showDialog('Calculation Aborted:', validation.errors.join('\n'))
       return
     }
-
     if (validation.warnings.length > 0) {
       renderResults(null)
       await showDialog('Warning:', validation.warnings.join('\n'))
       return
     }
-
     const result = calculateMetrics(parsedData, params)
     renderResults(result)
   }
@@ -53,5 +70,4 @@ async function processFile() {
   }
 }
 
-// initValidation() // Components handle their own validation events
-document.getElementById('calcBtn')?.addEventListener('click', processFile)
+document.getElementById('calcBtn')?.addEventListener('click', main)
