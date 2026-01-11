@@ -36,7 +36,6 @@ export class Output extends LitElement {
       GTsys,
       T_rec,
       T_TL,
-      hasGainWarning,
     } = this.data
 
     return html`
@@ -61,12 +60,11 @@ export class Output extends LitElement {
     <data-table .data=${this.data.rows}></data-table>
 
     <footer>
-      G/Tsys = ${GTsys.toFixed(2)} dB/K (alpha = 30 deg. T<sub>rec</sub> = ${T_rec.toFixed(2)} K, T<sub>TL</sub> = ${T_TL.toFixed(2)} K)
-    </footer>
-
-    ${hasGainWarning
-      ? html`<div>Computed AG >= 1.001, G/Ta corrections may be needed</div>`
+      <div>G/Tsys = ${GTsys.toFixed(2)} dB/K (alpha = 30 deg. T<sub>rec</sub> = ${T_rec.toFixed(2)} K, T<sub>TL</sub> = ${T_TL.toFixed(2)} K)</div>
+      ${avgGainNum >= 1.001
+      ? html`<div class="warning">Computed AG >= 1.001, G/Ta corrections may be needed</div>`
       : ''}
+    </footer>
   `
   }
 }

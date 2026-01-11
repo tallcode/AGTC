@@ -38,7 +38,4 @@ export interface CalculationResult {
   T_rec: number
   T_TL: number
   Tsys: number
-
-  // Warning flags
-  hasGainWarning: boolean
 }

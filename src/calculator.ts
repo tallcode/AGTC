@@ -165,6 +165,5 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
     T_rec,
     T_TL,
     Tsys,
-    hasGainWarning: avg_gain_num >= 1.001,
   }
 }

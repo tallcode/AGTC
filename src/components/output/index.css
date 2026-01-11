@@ -58,7 +58,8 @@ agtc-output footer {
 }
 
 
-agtc-output .res-gta-neg {
+agtc-output .warning {
+  margin-top: 10px;
   color: #F0F;
 }
 
