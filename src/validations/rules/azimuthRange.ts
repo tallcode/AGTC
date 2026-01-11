@@ -1,12 +1,17 @@
-import type { FFTable } from '../../types'
+import type { FFTable } from '@/types'
 
+/**
+ * Validates that the antenna pattern data covers the full azimuth range (0 to 360 degrees).
+ * It scans for valid gain data points (greater than -99.9 dB) to determine coverage.
+ */
 export function checkAzimuthRange(data: FFTable): void {
   const { table } = data
   let isFull360 = false
 
-  // We need to find a populated row (theta) and scan its phi values
+  // Find the first theta row that contains valid data to use for azimuth scanning
   let firstPopulatedTheta = -1
   for (let t = 0; t <= 180; t++) {
+    // -99.9 is used as a sentinel for "no data" or "invalid data"
     if (table[t][0] > -99.9) {
       firstPopulatedTheta = t
       break
@@ -18,6 +23,7 @@ export function checkAzimuthRange(data: FFTable): void {
     let minPhi = 360
     let maxPhi = 0
 
+    // Scan all phi angles to find the min and max populated azimuths
     for (let p = 0; p <= 360; p++) {
       if (row[p] > -99.9) {
         if (p < minPhi)
@@ -27,14 +33,14 @@ export function checkAzimuthRange(data: FFTable): void {
       }
     }
 
-    // Check full 360
-    // If we have 0 and (360 or 359 depending on step)
+    // Determine if the range effectively covers the full circle.
+    // We expect data to start at 0 and go up to at least 359 (allowing for 1-degree steps)
     if (minPhi === 0 && maxPhi >= 359) {
       isFull360 = true
     }
   }
 
-  // "FF_not_full range"
+  // validation failed if not full 360
   if (!isFull360) {
     throw new Error('Azimuth range is incomplete (not full 360 degrees circle).')
   }

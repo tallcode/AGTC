@@ -1,12 +1,13 @@
-import type { InputParams } from './types'
-import { calculateMetrics } from './calculate'
-import { showDialog } from './components/dialog/index'
-import { renderResults } from './display'
-import { parseFFtab } from './parser'
-import { validateFFTable } from './validations'
-import './components/field/index'
-import './style.css'
+import type { InputParams } from '@/types'
+import { calculateMetrics } from '@/calculate'
+import { showDialog } from '@/components/dialog/index'
+import { render } from '@/display'
+import { parseFFTab } from '@/parse'
+import { validateFFTab } from '@/validations'
+import '@/components/field/index'
+import '@/style.css'
 
+// Gather and validate inputs from the form fields
 function getAndValidateInputs(): InputParams | null {
   const skyTempField = document.querySelector('app-field[name="skyTemp"]') as any
   const earthTempField = document.querySelector('app-field[name="earthTemp"]') as any
@@ -34,6 +35,7 @@ function getAndValidateInputs(): InputParams | null {
   }
 }
 
+// Read the uploaded file and return its text content
 function readFile(uploadedFile: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -50,15 +52,15 @@ async function main() {
   }
   try {
     const text = await readFile(params.file)
-    const parsedData = parseFFtab(text)
-    const validation = validateFFTable(parsedData)
+    const data = parseFFTab(text)
+    const validation = validateFFTab(data)
     if (!validation.isValid) {
-      renderResults(null)
+      render(null)
       await showDialog('Error', validation.error)
       return
     }
-    const result = calculateMetrics(parsedData, params)
-    renderResults(result)
+    const result = calculateMetrics(data, params)
+    render(result)
   }
   catch (error) {
     console.error('Error processing file:', error)
