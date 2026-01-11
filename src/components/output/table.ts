@@ -1,11 +1,11 @@
-import type { CalculationResultRow } from '@/types'
+import type { ResultRow } from '@/types'
 import { html, LitElement } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
 @customElement('data-table')
 export class DataTable extends LitElement {
   @property({ attribute: false })
-  data?: CalculationResultRow[]
+  data?: ResultRow[]
 
   // Disable Shadow DOM to inherit global styles (style.css)
   protected createRenderRoot() {
