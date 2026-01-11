@@ -1,10 +1,10 @@
-import type { CalculationResult, CalculationResultRow, InputParams, ParsedData } from './types'
+import type { FFTable, InputParams, Result, ResultRow, SystemAt30Metrics } from './types'
 
 const PI = Math.PI
 
-export function calculateMetrics(data: ParsedData, params: InputParams): CalculationResult {
-  const { tot_dB } = data
-  const { skyTemp: T_sky, earthTemp: T_earth, translineLoss, receiverNF: ReceiverNF } = params
+export function calculateMetrics(data: FFTable, params: InputParams): Result {
+  const { table } = data
+  const { skyTemp, earthTemp, translineLoss, receiverNF: ReceiverNF } = params
 
   // 1. Precompute linear elements
   // arrays for integration
@@ -16,7 +16,7 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
   for (let p = 0; p <= 360; p++) {
     element[p] = new Float64Array(181)
     for (let t = 0; t <= 180; t++) {
-      const db = tot_dB[t][p]
+      const db = table[t][p]
       if (db > maxGainVal) {
         maxGainVal = db
         maxPhi = p
@@ -88,14 +88,15 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
   const loss_temperature = 290 * ((1.0 / avg_gain_num) - 1.0)
 
   // 3. Loop Alpha and build rows
-  const rows: CalculationResultRow[] = []
+  const rows: ResultRow[] = []
 
-  // Variables for system calculation (alpha=30)
-  let Ta = 0
-  let GTsys = 0
-  let T_rec = 0
-  let T_TL = 0
-  let Tsys = 0
+  // System parameters captured when alpha = 30 deg
+  let systemAt30: SystemAt30Metrics = {
+    GTsys: 0,
+    receiverTemp: 0,
+    transLineTemp: 0,
+    systemTemp: 0,
+  }
 
   const formatNum = (n: number) => (n >= 0 ? '+ ' : '- ') + Math.abs(n).toFixed(3)
 
@@ -104,7 +105,7 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
     const sumS = res.sum_Sky
     const sumE = res.sum_Earth
 
-    const T_pattern = (T_sky * sumS + T_earth * sumE) / (sumS + sumE)
+    const T_pattern = (skyTemp * sumS + earthTemp * sumE) / (sumS + sumE)
     // Note: Original code uses global `avg_gain_num` here which is calculated at alpha=0
     const T_total = (T_pattern - 290) * avg_gain_num + 290
 
@@ -132,21 +133,26 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
 
     // System calculation at 30 deg
     if (alpha === 30) {
-      Ta = T_pattern
-
       const translineLossFactor = translineLoss / 10
       const L_TL_val = 10 ** translineLossFactor
-      T_TL = (L_TL_val - 1) * 290
+      const transLineTemp = (L_TL_val - 1) * 290
 
       const ReceiverNFFactor = ReceiverNF / 10
-      T_rec = 290 * (10 ** ReceiverNFFactor - 1)
+      const receiverTemp = 290 * (10 ** ReceiverNFFactor - 1)
 
-      Tsys = Ta + (La - 1) * 290 + La * (L_TL_val - 1) * 290 + La * L_TL_val * T_rec
+      const systemTemp = T_pattern + (La - 1) * 290 + La * (L_TL_val - 1) * 290 + La * L_TL_val * receiverTemp
 
       const maxGainValLinear = maxGainVal / 10
       const D_num = La * (10 ** maxGainValLinear)
       const D_dB = 10 * Math.log10(D_num)
-      GTsys = D_dB - 10 * Math.log10(Tsys)
+      const GTsys = D_dB - 10 * Math.log10(systemTemp)
+
+      systemAt30 = {
+        GTsys,
+        receiverTemp,
+        transLineTemp,
+        systemTemp,
+      }
     }
   }
 
@@ -158,12 +164,9 @@ export function calculateMetrics(data: ParsedData, params: InputParams): Calcula
     maxGainVal,
     maxPhi,
     maxTheta,
-    T_sky,
-    T_earth,
+    skyTemp,
+    earthTemp,
     rows,
-    GTsys,
-    T_rec,
-    T_TL,
-    Tsys,
+    systemAt30,
   }
 }

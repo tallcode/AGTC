@@ -2,13 +2,13 @@ app-field {
   display: flex;
   align-items: center;
   margin-bottom: 15px;
-  font-size: 20px;
+  font-size: 14px;
   width: 100%;
 }
 
 app-field label {
   display: inline-block;
-  width: 320px;
+  width: 240px;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
@@ -22,7 +22,7 @@ app-field input {
   color: #CCC;
   border: 1px solid #3E3E42;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.2s ease;
   outline: none;
 }

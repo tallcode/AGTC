@@ -1,9 +1,9 @@
-import type { ParsedData } from './types'
+import type { FFTable } from './types'
 
-export function parseFFtab(text: string): ParsedData {
-  const tot_dB: Float64Array[] = Array.from({ length: 181 })
+export function parseFFtab(text: string): FFTable {
+  const table: Float64Array[] = Array.from({ length: 181 })
   for (let i = 0; i < 181; i++) {
-    tot_dB[i] = new Float64Array(361).fill(-100.0)
+    table[i] = new Float64Array(361).fill(-100.0)
   }
 
   const lines = text.split(/\r?\n/)
@@ -86,20 +86,20 @@ export function parseFFtab(text: string): ParsedData {
         const p_idx = Math.round(phi)
 
         if (t_idx < 181 && p_idx < 361) {
-          tot_dB[t_idx][p_idx] = val
+          table[t_idx][p_idx] = val
 
           // Handle 360 wrap consistency
           if (p_idx === 0)
-            tot_dB[t_idx][360] = val
+            table[t_idx][360] = val
           if (p_idx === 360)
-            tot_dB[t_idx][0] = val
+            table[t_idx][0] = val
         }
       }
     }
   }
 
   return {
-    tot_dB,
+    table,
     sliceMode: detectedSliceMode,
   }
 }

@@ -6,13 +6,13 @@ export interface InputParams {
   file: File
 }
 
-export interface ParsedData {
+export interface FFTable {
   /** 181 rows (theta 0..180), each 361 cols (phi 0..360) */
-  tot_dB: Float64Array[]
+  table: Float64Array[]
   sliceMode: 'phi' | 'theta' | 'unknown'
 }
 
-export interface CalculationResultRow {
+export interface ResultRow {
   alpha: number
   T_pattern: number
   T_loss: number
@@ -21,7 +21,14 @@ export interface CalculationResultRow {
   G_Ta_Str: string
 }
 
-export interface CalculationResult {
+export interface SystemAt30Metrics {
+  GTsys: number
+  receiverTemp: number
+  transLineTemp: number
+  systemTemp: number
+}
+
+export interface Result {
   avgGainNum: number
   avgGaindB: number
   La: number
@@ -29,13 +36,10 @@ export interface CalculationResult {
   maxGainVal: number // dBi
   maxPhi: number
   maxTheta: number
-  T_sky: number
-  T_earth: number
-  rows: CalculationResultRow[]
+  skyTemp: number
+  earthTemp: number
+  rows: ResultRow[]
 
   // System parameters at alpha=30
-  GTsys: number
-  T_rec: number
-  T_TL: number
-  Tsys: number
+  systemAt30: SystemAt30Metrics
 }

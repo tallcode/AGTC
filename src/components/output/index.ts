@@ -1,4 +1,4 @@
-import type { CalculationResult } from '@/types'
+import type { Result } from '@/types'
 import { html, LitElement } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import './table'
@@ -7,7 +7,7 @@ import './index.css'
 @customElement('agtc-output')
 export class Output extends LitElement {
   @property({ attribute: false })
-  data?: CalculationResult
+  data?: Result
 
   // Disable Shadow DOM to inherit global styles
   protected createRenderRoot() {
@@ -31,12 +31,12 @@ export class Output extends LitElement {
       maxGainVal,
       maxPhi,
       maxTheta,
-      T_sky,
-      T_earth,
-      GTsys,
-      T_rec,
-      T_TL,
+      skyTemp,
+      earthTemp,
+      systemAt30,
     } = this.data
+
+    const { GTsys, receiverTemp, transLineTemp } = systemAt30
 
     return html`
     <header>
@@ -52,15 +52,15 @@ export class Output extends LitElement {
       </div>
       
       <div style="display:flex; gap:20px; color:#55F;">
-        <span>T<sub>sky</sub> = <b>${T_sky.toFixed(2)}</b> K</span>
-        <span>T<sub>earth</sub> = <b>${T_earth.toFixed(2)}</b> K</span>
+        <span>T<sub>sky</sub> = <b>${skyTemp.toFixed(2)}</b> K</span>
+        <span>T<sub>earth</sub> = <b>${earthTemp.toFixed(2)}</b> K</span>
       </div>
     </header>
 
     <data-table .data=${this.data.rows}></data-table>
 
     <footer>
-      <div>G/Tsys = ${GTsys.toFixed(2)} dB/K (alpha = 30 deg. T<sub>rec</sub> = ${T_rec.toFixed(2)} K, T<sub>TL</sub> = ${T_TL.toFixed(2)} K)</div>
+      <div>G/Tsys = ${GTsys.toFixed(2)} dB/K (alpha = 30 deg. T<sub>rec</sub> = ${receiverTemp.toFixed(2)} K, T<sub>TL</sub> = ${transLineTemp.toFixed(2)} K)</div>
       ${avgGainNum >= 1.001
       ? html`<div class="warning">Computed AG >= 1.001, G/Ta corrections may be needed</div>`
       : ''}

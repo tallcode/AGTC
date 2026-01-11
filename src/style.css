@@ -12,16 +12,17 @@ body {
 h1 {
   color: #DCDCDC;
   margin-bottom: 10px;
+  font-size: 20px;
 }
 
 h2 {
   color: #2AA63E;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 h3 {
   color: #DCDCDC;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 
@@ -31,7 +32,7 @@ button {
   color: white;
   border: none;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 16px;
   margin-top: 10px;
   border-radius: 4px;
   transition: background-color 0.2s ease;

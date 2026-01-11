@@ -1,9 +1,9 @@
 import type { InputParams } from './types'
-import { calculateMetrics } from './calculator'
+import { calculateMetrics } from './calculate'
 import { showDialog } from './components/dialog/index'
 import { renderResults } from './display'
 import { parseFFtab } from './parser'
-import { validateFFTable } from './validation'
+import { validateFFTable } from './validations'
 import './components/field/index'
 import './style.css'
 
@@ -54,12 +54,7 @@ async function main() {
     const validation = validateFFTable(parsedData)
     if (!validation.isValid) {
       renderResults(null)
-      await showDialog('Calculation Aborted:', validation.errors.join('\n'))
-      return
-    }
-    if (validation.warnings.length > 0) {
-      renderResults(null)
-      await showDialog('Warning:', validation.warnings.join('\n'))
+      await showDialog('Error', validation.error)
       return
     }
     const result = calculateMetrics(parsedData, params)
