@@ -1,6 +1,10 @@
-
 agtc-output {
-  display: none;             /* 默认隐藏，计算后显示 */
+  margin-top: 20px;
+}
+
+agtc-result {
+  display: block;
+  box-sizing: border-box;
   margin-top: 20px;
   white-space: normal;
   font-family: Consolas, Courier, monospace;
@@ -12,55 +16,70 @@ agtc-output {
 }
 
 /* 头部输出文字间距控制 */
-agtc-output header {
+agtc-result header {
   color: #FFF;
   margin-bottom: 10px;
   line-height: 1.4;
 }
 
-agtc-output header > div {
+agtc-result header > div {
   margin-bottom: 3px;
 }
 
+agtc-result .temps {
+  display: flex;
+  gap: 20px;
+  color: #55F;
+}
+
 /* 表格样式优化 */
-agtc-output table {
+agtc-result table {
   border-collapse: collapse;
   width: 100%;
   max-width: 700px;
   margin-top: 10px;
 }
 
-agtc-output table th,
-agtc-output table td {
+agtc-result table th,
+agtc-result table td {
   padding: 2px 5px;
   text-align: center;
-  line-height: 0.8;
 }
 
-agtc-output table th {
+agtc-result table th {
   color: #E5E54C;
   border-bottom: 2px solid #555;
+  line-height: 1.5;
 }
 
-agtc-output table td {
+agtc-result table td {
   color: #E5E54C;
+  line-height: 1.1;
 }
 
-agtc-output .highlight td {
+agtc-result .highlight td {
   color: #D94848 !important;
   font-weight: bold;
 }
 
-agtc-output footer {
+agtc-result footer {
   margin-top: 15px;
   color: #E5E54C;
   text-align: center;
 }
 
-
-agtc-output .warning {
+agtc-result .warning {
   margin-top: 10px;
   color: #F0F;
 }
+
+agtc-output button {
+  background-color: #28A745;
+}
+
+agtc-output button:hover {
+  background-color: #28A745;
+}
+
 
 
