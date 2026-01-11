@@ -1,21 +1,9 @@
 import type { CalculationResult } from './types'
-import { html, render } from 'lit'
-import './components/calculation-results'
+import './components/output'
 
-export function renderResults(result: CalculationResult) {
-  const resultsDiv = document.getElementById('results')
-  if (!resultsDiv)
+export function renderResults(result: CalculationResult | null | undefined) {
+  const resultsEl = document.getElementById('agtc-output') as any
+  if (!resultsEl)
     return
-
-  resultsDiv.style.display = 'block'
-
-  const template = html`<calculation-results .data=${result}></calculation-results>`
-
-  render(template, resultsDiv)
-}
-
-export function hideResults() {
-  const resultsDiv = document.getElementById('results')
-  if (resultsDiv)
-    resultsDiv.style.display = 'none'
+  resultsEl.data = result
 }

@@ -1,11 +1,11 @@
-import type { CalculationResult } from '../types'
+import type { CalculationResultRow } from '@/types'
 import { html, LitElement } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
-@customElement('results-table')
-export class ResultsTable extends LitElement {
+@customElement('data-table')
+export class DataTable extends LitElement {
   @property({ attribute: false })
-  data?: CalculationResult
+  data?: CalculationResultRow[]
 
   // Disable Shadow DOM to inherit global styles (style.css)
   protected createRenderRoot() {
@@ -20,10 +20,8 @@ export class ResultsTable extends LitElement {
     if (!this.data)
       return html``
 
-    const { rows, GTsys, T_rec, T_TL } = this.data
-
     return html`
-      <table class="res-table">
+      <table>
         <thead>
           <tr>
             <th>Alpha (deg.)</th>
@@ -34,8 +32,8 @@ export class ResultsTable extends LitElement {
           </tr>
         </thead>
         <tbody>
-          ${rows.map(row => html`
-            <tr class="${row.isHighlight ? 'row-highlight' : ''}">
+          ${this.data.map(row => html`
+            <tr class="${row.isHighlight ? 'highlight' : ''}">
               <td>${row.alpha}</td>
               <td>${row.T_pattern.toFixed(3)}</td>
               <td>${this.formatNum(row.T_loss)}</td>
@@ -45,26 +43,12 @@ export class ResultsTable extends LitElement {
           `)}
         </tbody>
       </table>
-
-      <table class="res-table">
-        <thead>
-          <tr>
-            <th> </th>
-          </tr>
-          <tr>
-            <th>
-              G/Tsys = ${GTsys.toFixed(2)} dB/K (alpha = 30 deg. T<sub>rec</sub> = ${T_rec.toFixed(2)} K, T<sub>TL</sub> = ${T_TL.toFixed(2)} K)
-            </th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     `
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'results-table': ResultsTable
+    'data-table': DataTable
   }
 }

@@ -1,9 +1,10 @@
 import { calculateMetrics } from './calculator'
+import { showDialog } from './components/dialog/index'
 import { validateFFTable } from './data-validation'
-import { showDialog } from './dialog'
-import { hideResults, renderResults } from './display'
+import { renderResults } from './display'
 import { parseFFtab } from './parser'
-import { getAndValidateInputs, initValidation, validateFileSelection } from './validation'
+import { getAndValidateInputs, validateFileSelection } from './validation'
+import './components/field/index'
 import './style.css'
 
 function readFile(uploadedFile: File): Promise<string> {
@@ -16,9 +17,11 @@ function readFile(uploadedFile: File): Promise<string> {
 }
 
 async function processFile() {
-  const fileInput = document.getElementById('fileInput') as HTMLInputElement
+  // const fileInput = document.getElementById('fileInput') as HTMLInputElement // Now handled via component query in validateFileSelection
   const params = getAndValidateInputs()
-  const file = validateFileSelection(fileInput)
+
+  // validateFileSelection will look up the component
+  const file = validateFileSelection(null as any)
 
   if (!params || !file) {
     return
@@ -31,13 +34,13 @@ async function processFile() {
     const validation = validateFFTable(parsedData)
 
     if (!validation.isValid) {
-      hideResults()
+      renderResults(null)
       await showDialog('Calculation Aborted:', validation.errors.join('\n'))
       return
     }
 
     if (validation.warnings.length > 0) {
-      hideResults()
+      renderResults(null)
       await showDialog('Warning:', validation.warnings.join('\n'))
       return
     }
@@ -50,5 +53,5 @@ async function processFile() {
   }
 }
 
-initValidation()
+// initValidation() // Components handle their own validation events
 document.getElementById('calcBtn')?.addEventListener('click', processFile)

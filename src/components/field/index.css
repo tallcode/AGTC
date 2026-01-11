@@ -1,0 +1,93 @@
+app-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 20px;
+  width: 100%;
+}
+
+app-field label {
+  display: inline-block;
+  width: 320px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+app-field input {
+  box-sizing: border-box;
+  height: 38px;
+  padding: 8px 12px;
+  background: #252526;
+  color: #CCC;
+  border: 1px solid #3E3E42;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+app-field input:focus {
+  border-color: #007ACC;
+  background-color: #1E1E1E;
+  box-shadow: 0 0 0 2px rgb(0 122 204 / 20%);
+}
+
+app-field input:hover {
+  border-color: #555;
+}
+
+app-field input:hover:focus {
+  border-color: #007ACC;
+}
+
+app-field input[type="number"] {
+  width: 120px;
+  appearance: textfield;
+}
+
+app-field input[type="number"]::-webkit-inner-spin-button, 
+app-field input[type="number"]::-webkit-outer-spin-button { 
+  appearance: none; 
+  margin: 0; 
+}
+
+app-field input[type="file"] {
+  width: 250px;
+  cursor: pointer;
+  line-height: 20px;
+}
+
+app-field input[type="file"]::file-selector-button {
+  display: none;
+}
+
+app-field input[type="text"] {
+  width: 250px;
+}
+
+app-field input.input-error {
+  border-color: #FF4D4F !important;
+  background-color: rgb(255 77 79 / 10%) !important;
+}
+
+app-field .error-message {
+  color: #FF4D4F;
+  font-size: 14px;
+  margin-left: 15px;
+  display: inline-block;
+  animation: field-fade-in 0.3s ease-in-out;
+  white-space: nowrap;
+}
+
+@keyframes field-fade-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(-5px); 
+  }
+
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}

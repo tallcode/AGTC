@@ -1,0 +1,65 @@
+
+agtc-output {
+  display: none;             /* 默认隐藏，计算后显示 */
+  margin-top: 20px;
+  white-space: normal;
+  font-family: Consolas, Courier, monospace;
+  border: 1px solid #555; /* 边框颜色 */
+  padding: 15px;             /* 边框内边距 */
+  background-color: #000; /* 稍亮的深色背景，突出显示区域 */
+  border-radius: 4px;        /* 稍微圆角化 */
+  width: 100%;
+}
+
+/* 头部输出文字间距控制 */
+agtc-output header {
+  color: #FFF;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+agtc-output header > div {
+  margin-bottom: 3px;
+}
+
+/* 表格样式优化 */
+agtc-output table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 700px;
+  margin-top: 10px;
+}
+
+agtc-output table th,
+agtc-output table td {
+  padding: 2px 5px;
+  text-align: center;
+  line-height: 0.8;
+}
+
+agtc-output table th {
+  color: #E5E54C;
+  border-bottom: 2px solid #555;
+}
+
+agtc-output table td {
+  color: #E5E54C;
+}
+
+agtc-output .highlight td {
+  color: #D94848 !important;
+  font-weight: bold;
+}
+
+agtc-output footer {
+  margin-top: 15px;
+  color: #E5E54C;
+  text-align: center;
+}
+
+
+agtc-output .res-gta-neg {
+  color: #F0F;
+}
+
+

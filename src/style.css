@@ -1,9 +1,11 @@
+@import url('normalize.css');
+
 body {
   font-family: Tahoma, sans-serif;
   background-color: #1E1E1E;
   color: #CCC;
   padding: 30px;
-  width: 800px;
+  width: 720px;
   margin: 0 auto;
 }
 
@@ -138,133 +140,4 @@ button {
 
 button:hover {
   background-color: #0098FF;
-}
-
-/* --- 按钮下方输出内容整体外框样式 --- */
-#results {
-  display: none;             /* 默认隐藏，计算后显示 */
-  margin-top: 20px;
-  white-space: normal;
-  font-family: Consolas, Courier, monospace;
-  border: 1px solid #555; /* 边框颜色 */
-  padding: 15px;             /* 边框内边距 */
-  background-color: #000; /* 稍亮的深色背景，突出显示区域 */
-  border-radius: 4px;        /* 稍微圆角化 */
-  width: 100%;
-}
-
-/* 头部输出文字间距控制 */
-.res-header {
-  color: #FFF;
-  margin-bottom: 10px;
-  line-height: 1.4;
-}
-
-.res-header div {
-  margin-bottom: 3px;
-}
-
-/* 表格样式优化 */
-.res-table {
-  border-collapse: collapse;
-  width: 100%;
-  max-width: 700px;
-  margin-top: 10px;
-}
-
-.res-table th,
-.res-table td {
-  padding: 2px 5px;
-  text-align: center;
-  line-height: 0.8;
-}
-
-.res-table th {
-  color: #E5E54C;
-  border-bottom: 2px solid #555;
-}
-
-.res-table td {
-  color: #E5E54C;
-}
-
-.res-warning {
-  color: #D94848;
-}
-
-.res-info {
-  color: #55F;
-}
-
-.res-gta-neg {
-  color: #F0F;
-}
-
-.val-avg {
-  color: #FFF;
-}
-
-.val-sky {
-  color: #55F;
-}
-
-.val-earth {
-  color: #55F;
-}
-
-.val-loss {
-  color: #FFF;
-}
-
-.row-highlight td {
-  color: #D94848 !important;
-  font-weight: bold;
-}
-
-dialog {
-  background-color: #252526;
-  color: #CCC;
-  border: 1px solid #3E3E42;
-  border-radius: 6px;
-  padding: 20px;
-  max-width: 500px;
-  box-shadow: 0 4px 6px rgb(0 0 0 / 30%);
-}
-
-dialog::backdrop {
-  background-color: rgb(0 0 0 / 50%);
-}
-
-dialog h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #DCDCDC;
-  font-size: 18px;
-}
-
-dialog pre {
-  font-family: inherit;
-  white-space: pre-wrap;
-  margin-bottom: 20px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-.dialog-footer {
-  text-align: right;
-}
-
-/* stylelint-disable-next-line no-descending-specificity */
-dialog button {
-  padding: 8px 16px;
-  background-color: #007ACC;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-dialog button:hover {
-  background-color: #0062A3;
 }

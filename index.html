@@ -11,47 +11,66 @@
     <h2>Based on "AGTC_anyGTa_2lite"</h2>
     <h2>G/Ta computation from Far Field Table by F5FOD with DG7YBN</h2>
 
-    <div class="input-group">
-        <label for="skyTemp">Sky Temperature (K):</label>
-        <input type="number" id="skyTemp" value="20" step="1">
-    </div>
+    <app-field 
+      name="skyTemp" 
+      label="Sky Temperature" 
+      memo="K" 
+      required 
+      min="0" 
+      max="9999999" 
+      type="number" 
+      value="20" 
+      step="1">
+    </app-field>
 	
-    <div class="input-group">
-        <label for="earthTemp">Earth Temperature (K):</label>
-        <input type="number" id="earthTemp" value="350" step="1">
-    </div>
+    <app-field 
+      name="earthTemp" 
+      label="Earth Temperature" 
+      memo="K" 
+      required 
+      min="0" 
+      max="9999999" 
+      type="number" 
+      value="350" 
+      step="1">
+    </app-field>
 	
-	<div class="input-group">
-        <label for="translineLoss">Trans. Line Loss (dB):</label>
-        <input type="number" id="translineLoss" value="0.20" step="0.01">
-    </div>
+	<app-field 
+      name="translineLoss" 
+      label="Trans. Line Loss" 
+      memo="dB" 
+      required 
+      min="0" 
+      type="number" 
+      value="0.20" 
+      step="0.01">
+    </app-field>
 	
-	<div class="input-group">
-        <label for="ReceiverNF">Receiver NF (dB):</label>
-        <input type="number" id="ReceiverNF" value="0.75" step="0.01">
-    </div>
+	<app-field 
+      name="ReceiverNF" 
+      label="Receiver NF" 
+      memo="dB" 
+      required 
+      min="0" 
+      type="number" 
+      value="0.75" 
+      step="0.01">
+    </app-field>
 
-    <div class="input-group">
-        <label for="fileInput">Input FFtab file (.txt):</label>
-        <input type="file" id="fileInput" accept=".txt">
-    </div>
+    <app-field 
+      name="fileInput" 
+      label="Far Field Table (FFtab) file" 
+      memo=".txt" 
+      required 
+      type="file" 
+      accept=".txt">
+    </app-field>
 
     <div>
         <button id="calcBtn">Calculate</button>
     </div>
 
-    <div id="results"></div>
-
-    <dialog id="appDialog">
-      <form method="dialog">
-        <h3 id="dialogTitle"></h3>
-        <pre id="dialogMessage"></pre>
-        <div class="dialog-footer">
-          <button value="ok">OK</button>
-        </div>
-      </form>
-    </dialog>
-
+    <agtc-output id="agtc-output"></agtc-output>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
