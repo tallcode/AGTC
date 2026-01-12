@@ -25,7 +25,7 @@ export class Output extends LitElement {
     return module.default
   }
 
-  private async saveResult() {
+  private async exportPNG() {
     const element = this.querySelector('agtc-result') as HTMLElement
     if (!element) return
 
@@ -44,6 +44,31 @@ export class Output extends LitElement {
     }
   }
 
+  private exportCSV() {
+    if (!this.data || !this.data.rows) return
+
+    const header = ['Alpha (deg)', 'T_pattern (K)', 'T_loss (K)', 'T_total (K)', 'G/T (dB/K)']
+    const rows = this.data.rows.map((row) => [
+      row.alpha.toFixed(1),
+      row.T_pattern.toFixed(2),
+      row.T_loss.toFixed(2),
+      row.T_total.toFixed(2),
+      row.G_Ta_dB.toFixed(2)
+    ])
+
+    const csvContent = [header.join(','), ...rows.map((r) => r.join(','))].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'agtc_data.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   protected render() {
     if (!this.data)
       return html``
@@ -51,7 +76,10 @@ export class Output extends LitElement {
 
     return html`
       <agtc-result .data=${this.data}></agtc-result>
-      <div><button id="save" @click=${this.saveResult}>Save Result</button></div>
+      <div class="actions">
+        <button id="export-png" @click=${this.exportPNG}>Export PNG</button>
+        <button id="export-csv" @click=${this.exportCSV}>Export CSV</button>
+      </div>
   `
   }
 }
