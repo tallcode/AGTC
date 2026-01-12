@@ -19,9 +19,12 @@ export class Output extends LitElement {
     return this
   }
 
-  private async checkCdn() {
-    if (this.cdnAvailable) return
+  connectedCallback() {
+    super.connectedCallback()
+    this.checkCdn()
+  }
 
+  private async checkCdn() {
     try {
       const controller = new AbortController()
       const id = setTimeout(() => controller.abort(), 3000)
@@ -39,9 +42,6 @@ export class Output extends LitElement {
   protected updated(changedProperties: Map<string, any>) {
     if (changedProperties.has('data')) {
       this.style.display = this.data ? 'block' : 'none'
-      if (this.data && !this.cdnAvailable) {
-        this.checkCdn()
-      }
     }
   }
 
