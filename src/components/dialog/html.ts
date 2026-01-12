@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit'
 import { customElement, query, state } from 'lit/decorators.js'
-import './index.css'
+import './index.less'
 
 @customElement('app-dialog')
 export class AppDialog extends LitElement {

@@ -5,7 +5,7 @@ import { render } from '@/display'
 import { parseFFTab } from '@/parse'
 import { validateFFTab } from '@/validations'
 import '@/components/field/index'
-import '@/style.css'
+import '@/style.less'
 
 // Gather and validate inputs from the form fields
 function getAndValidateInputs(): InputParams | null {
@@ -67,4 +67,11 @@ async function main() {
   }
 }
 
-document.getElementById('calcBtn')?.addEventListener('click', main)
+document.addEventListener('DOMContentLoaded', () => {
+  ((button) => {
+    if (!button)
+      return
+    button.addEventListener('click', main)
+    button.setAttribute('style', 'display: block;')
+  })(document.getElementById('calcBtn'))
+})

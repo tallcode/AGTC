@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import './index.css'
+import './index.less'
 
 type FieldType = 'text' | 'number' | 'file'
 

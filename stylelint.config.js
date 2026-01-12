@@ -10,4 +10,10 @@ export default {
     '@stylistic/color-hex-case': 'upper',
     '@stylistic/unit-case': 'lower',
   },
+  overrides: [
+    {
+      files: ['**/*.less'],
+      customSyntax: 'postcss-less',
+    },
+  ],
 }

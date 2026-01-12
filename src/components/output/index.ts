@@ -1,42 +1,17 @@
 import type { Result } from '@/types'
 import { html, LitElement } from 'lit'
-import { customElement, property, state } from 'lit/decorators.js'
+import { customElement, property } from 'lit/decorators.js'
 import './result'
-import './index.css'
-
-const HTML2CANVAS_CDN = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+import './index.less'
 
 @customElement('agtc-output')
 export class Output extends LitElement {
   @property({ attribute: false })
   data?: Result
 
-  @state()
-  private cdnAvailable = false
-
   // Disable Shadow DOM to inherit global styles
   protected createRenderRoot() {
     return this
-  }
-
-  connectedCallback() {
-    super.connectedCallback()
-    this.checkCdn()
-  }
-
-  private async checkCdn() {
-    try {
-      const controller = new AbortController()
-      const id = setTimeout(() => controller.abort(), 3000)
-      const res = await fetch(HTML2CANVAS_CDN, { method: 'HEAD', signal: controller.signal })
-      clearTimeout(id)
-      if (res.ok) {
-        this.cdnAvailable = true
-      }
-    } catch (e) {
-      console.warn('CDN check failed:', e)
-      this.cdnAvailable = false
-    }
   }
 
   protected updated(changedProperties: Map<string, any>) {
@@ -46,15 +21,8 @@ export class Output extends LitElement {
   }
 
   private async loadHtml2Canvas(): Promise<any> {
-    if ((window as any).html2canvas) return (window as any).html2canvas
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = HTML2CANVAS_CDN
-      script.onload = () => resolve((window as any).html2canvas)
-      script.onerror = reject
-      document.head.appendChild(script)
-    })
+    const module = await import('html2canvas')
+    return module.default
   }
 
   private async saveResult() {
@@ -83,9 +51,7 @@ export class Output extends LitElement {
 
     return html`
       <agtc-result .data=${this.data}></agtc-result>
-      ${this.cdnAvailable
-        ? html`<div><button id="save" @click=${this.saveResult}>Save Result</button></div>`
-        : html``}
+      <div><button id="save" @click=${this.saveResult}>Save Result</button></div>
   `
   }
 }

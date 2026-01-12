@@ -1,0 +1,82 @@
+agtc-output {
+  margin-top: 20px;
+
+  button {
+    background-color: #28A745;
+
+    &:hover {
+      background-color: #28A745;
+    }
+  }
+}
+
+agtc-result {
+  display: block;
+  box-sizing: border-box;
+  margin-top: 20px;
+  white-space: normal;
+  font-family: Consolas, Courier, monospace;
+  border: 1px solid #555; /* 边框颜色 */
+  padding: 15px;             /* 边框内边距 */
+  background-color: #000; /* 稍亮的深色背景，突出显示区域 */
+  border-radius: 4px;        /* 稍微圆角化 */
+  width: 100%;
+
+  /* 头部输出文字间距控制 */
+  header {
+    color: #FFF;
+    margin-bottom: 10px;
+    line-height: 1.4;
+
+    > div {
+      margin-bottom: 3px;
+    }
+  }
+
+  .temps {
+    display: flex;
+    gap: 20px;
+    color: #55F;
+  }
+
+  /* 表格样式优化 */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 700px;
+    margin-top: 10px;
+
+    th,
+    td {
+      padding: 2px 5px;
+      text-align: center;
+    }
+
+    th {
+      color: #E5E54C;
+      border-bottom: 2px solid #555;
+      line-height: 1.5;
+    }
+
+    td {
+      color: #E5E54C;
+      line-height: 1.1;
+    }
+  }
+
+  .highlight td {
+    color: #D94848 !important;
+    font-weight: bold;
+  }
+
+  footer {
+    margin-top: 15px;
+    color: #E5E54C;
+    text-align: center;
+  }
+
+  .warning {
+    margin-top: 10px;
+    color: #F0F;
+  }
+}
