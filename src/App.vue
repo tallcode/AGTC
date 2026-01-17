@@ -234,7 +234,7 @@ async function handleCalculate() {
           />
         </Field>
 
-        <div class="mt-4 pt-4">
+        <div class="mt-4">
           <button
             :disabled="loading"
             class="rounded bg-sky-600 px-6 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

@@ -47,16 +47,16 @@ function formatK(n: number) {
           <td class="px-4 py-0.5 text-center">
             {{ row.alpha }}
           </td>
-          <td class="px-4 py-0.5 text-right">
+          <td class="px-4 text-right">
             {{ formatK(row.T_pattern) }}
           </td>
-          <td class="px-4 py-0.5 text-right">
+          <td class="px-4 text-right">
             {{ format(row.T_loss) }}
           </td>
-          <td class="px-4 py-0.5 text-right">
+          <td class="px-4 text-right">
             {{ format(row.T_total) }}
           </td>
-          <td class="px-4 py-0.5 text-right">
+          <td class="px-4 text-right">
             {{ row.G_Ta_Str || format(row.G_Ta_dB) }}
           </td>
         </tr>
