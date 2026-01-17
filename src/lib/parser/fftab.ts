@@ -1,4 +1,4 @@
-import type { FFTable } from '../types'
+import type { FFTable } from '@/types'
 
 /**
  * Parses the Far Field Table text content into a structured 2D array.

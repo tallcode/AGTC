@@ -1,9 +1,8 @@
-import type { FFTable } from '../types'
+import type { FFTable } from '@/types'
 import { checkAzimuthRange } from './rules/azimuthRange'
 import { checkElevationRange } from './rules/elevationRange'
 import { checkSliceDirection } from './rules/sliceDirection'
 import { checkStepSize } from './rules/stepSize'
-import { checkTilt } from './rules/tilt'
 
 export interface ValidationResult {
   isValid: boolean
@@ -15,7 +14,6 @@ const validators = [
   checkAzimuthRange,
   checkElevationRange,
   checkStepSize,
-  checkTilt,
 ]
 
 export function validateFFTab(data: FFTable): ValidationResult {

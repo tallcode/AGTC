@@ -1,4 +1,4 @@
-import type { FFTable } from '../../types'
+import type { FFTable } from '@/types'
 
 /**
  * Validates that the far-field data covers the full elevation range (Theta: 0 to 180 degrees),

@@ -1,4 +1,4 @@
-import type { FFTable } from '../../types'
+import type { FFTable } from '@/types'
 
 /**
  * Validates that the antenna pattern data covers the full azimuth range (0 to 360 degrees).

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { SelectOption } from './components/FormField.vue'
-import type { FFTable, Result } from './lib/types'
+import type { SelectOption } from '@/components/FormField.vue'
+import type { FFTable, Result } from '@/types'
 import { computed, reactive, ref } from 'vue'
-import FormField from './components/FormField.vue'
-import ResultCard from './components/ResultCard.vue'
-import { calculateMetrics } from './lib/calculate'
-import { applyCalibration } from './lib/calibration'
-import { useDialog } from './lib/modal'
-import { parseFFE, parseFFTab, parseMMANA } from './lib/parser'
-import { validateFFTab } from './lib/validations'
+import FormField from '@/components/FormField.vue'
+import ResultCard from '@/components/ResultCard.vue'
+import { calculateMetrics } from '@/lib/calculate'
+import { calibration, detect } from '@/lib/calibration'
+import { useDialog } from '@/lib/modal'
+import { parseFFE, parseFFTab, parseMMANA } from '@/lib/parser'
+import { validateFFTab } from '@/lib/validations'
 
 // Setup State
 const loading = ref(false)
@@ -87,38 +87,24 @@ async function handleCalculate() {
       data = parseFFTab(fileText)
     }
 
-    // Check for "Calibration Needed" (Max gain not at 90/0)
-    // Basic logic from old store
-    let maxGainVal = -Infinity
-    let maxTheta = 0
-    let maxPhi = 0
-    for (let t = 0; t <= 180; t++) {
-      for (let p = 0; p <= 360; p++) {
-        if (data.table[t]![p]! > maxGainVal) {
-          maxGainVal = data.table[t]![p]!
-          maxTheta = t
-          maxPhi = p
-        }
-      }
-    }
-
-    const isThetaAligned = Math.abs(maxTheta - 90) < 1
-    const isPhiAligned = Math.abs(maxPhi) < 1 || Math.abs(maxPhi - 360) < 1
-
-    if (!isThetaAligned || !isPhiAligned) {
-      const msg = `Max Gain is not aligned to Horizon/Front.\nTheta=${maxTheta}° (Exp: 90°), Phi=${maxPhi}° (Exp: 0°).\n\nDo you want to apply Zero Calibration?`
-      if (await confirmDialog(msg, 'Calibration Needed')) {
-        data = applyCalibration(data, true, true)
-      }
-      else {
-        throw new Error('Calculation aborted. Uncalibrated data.')
-      }
-    }
-
-    // Validate Data Quality
+    // Validate Data Quality (First)
     const validation = validateFFTab(data)
     if (!validation.isValid) {
       throw new Error(validation.error || 'Unknown Validation Error')
+    }
+
+    // Check for "Calibration Needed"
+    const calibrationCheck = detect(data)
+    if (calibrationCheck.needed) {
+      const msg = `Max Gain is not aligned to Horizon/Front.\n${calibrationCheck.reason}.\n\nCalibration is required to proceed. Do you want to apply Zero Calibration?`
+      if (await confirmDialog(msg, 'Calibration Required')) {
+        data = calibration(data, true, true)
+      }
+      else {
+        // Must calibrate to proceed
+        result.value = null
+        throw new Error('Calculation aborted. Zero Calibration is required.')
+      }
     }
 
     // Calculate

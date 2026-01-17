@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Result } from '../lib/types'
+import type { Result } from '../types'
 import { ref } from 'vue'
 import ResultTable from './ResultTable.vue'
 

@@ -1,4 +1,4 @@
-import type { FFTable, InputParams, Result, ResultRow, SystemAt30Metrics } from './types'
+import type { FFTable, InputParams, Result, ResultRow, SystemAt30Metrics } from '@/types'
 
 const PI = Math.PI
 

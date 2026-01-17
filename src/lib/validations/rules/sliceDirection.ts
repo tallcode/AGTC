@@ -1,4 +1,4 @@
-import type { FFTable } from '../../types'
+import type { FFTable } from '@/types'
 
 /**
  * Validates if the slice direction is Theta.

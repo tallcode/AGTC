@@ -1,4 +1,4 @@
-import type { FFTable } from '../types'
+import type { FFTable } from '@/types'
 
 /**
  * Parses FEKO .ffe file.

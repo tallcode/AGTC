@@ -1,4 +1,4 @@
-import type { FFTable } from '../../types'
+import type { FFTable } from '@/types'
 
 /**
  * Validates that the step size of the data is 1 degree.

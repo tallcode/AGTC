@@ -1,10 +1,13 @@
-import type { FFTable } from '../types'
+import type { FFTable } from '@/types'
+import { detect } from './detect'
 import { DEG2RAD, getInterpolatedValue, RAD2DEG } from './utils'
+
+export { detect }
 
 /**
  * Applies zero calibration (shifts max gain to Theta=90, Phi=0)
  */
-export function applyCalibration(data: FFTable, zeroAz: boolean, zeroEl: boolean): FFTable {
+export function calibration(data: FFTable, zeroAz: boolean, zeroEl: boolean): FFTable {
   if (!zeroAz && !zeroEl)
     return data
 

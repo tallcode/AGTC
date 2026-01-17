@@ -1,5 +1,5 @@
 import { createApp, reactive } from 'vue'
-import DialogModal from '../components/DialogModal.vue'
+import DialogModal from '@/components/DialogModal.vue'
 
 interface ModalState {
   isOpen: boolean
