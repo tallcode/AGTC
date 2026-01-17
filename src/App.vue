@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SelectOption } from '@/components/FormField.vue'
+import type { SelectOption } from '@/components/Form/types'
 import type { FFTable, Result } from '@/types'
 import { computed, reactive, ref } from 'vue'
-import FormField from '@/components/FormField.vue'
+import { Field, FileInput, NumberInput, SelectInput } from '@/components/Form'
 import ResultCard from '@/components/ResultCard.vue'
 import { calculateMetrics } from '@/lib/calculate'
 import { calibration, detect } from '@/lib/calibration'
@@ -27,7 +27,7 @@ const form = reactive({
 })
 
 const formatOptions: SelectOption[] = [
-  { value: 'fft', label: 'FFtab (.txt)' },
+  { value: 'fft', label: 'Far Field Table (.txt)' },
   { value: 'mmana', label: 'MMANA (.csv)' },
   { value: 'ffe', label: 'FEKO Far Field (.ffe)' },
 ]
@@ -36,15 +36,16 @@ const currentFileMeta = computed(() => {
   if (form.fileFormat === 'mmana') {
     return { accept: '.csv', label: 'MMANA-GAL Export (.csv)', showFreq: true }
   }
-  if (form.fileFormat === 'ffe') {
-    return { accept: '.ffe,.txt', label: 'FEKO Far Field (.ffe)', showFreq: false }
+  else if (form.fileFormat === 'ffe') {
+    return { accept: '.ffe', label: 'FEKO Far Field (.ffe)', showFreq: false }
   }
-  return { accept: '.txt', label: 'Far Field Table (FFTab)', showFreq: false }
+  else {
+    return { accept: '.txt', label: 'Far Field Table (FFTab)', showFreq: false }
+  }
 })
 
 function onFileUpdate(file: File | null) {
   form.file = file
-  // Reset result on file change to avoid stale data
   result.value = null
   error.value = null
 }
@@ -143,66 +144,73 @@ async function handleCalculate() {
 
       <!-- Input Form -->
       <div class="space-y-6">
-        <FormField
-          label="Sky Temperature"
-          memo="K"
-          type="number"
-          :value="form.skyTemp"
-          :min="0"
-          @update="(v) => form.skyTemp = v"
-        />
-        <FormField
-          label="Earth Temperature"
-          memo="K"
-          type="number"
-          :value="form.earthTemp"
-          :min="0"
-          @update="(v) => form.earthTemp = v"
-        />
-        <FormField
-          label="Trans. Line Loss"
-          memo="dB"
-          type="number"
-          :value="form.translineLoss"
-          :step="0.01"
-          :min="0"
-          @update="(v) => form.translineLoss = v"
-        />
-        <FormField
-          label="Receiver NF"
-          memo="dB"
-          type="number"
-          :value="form.receiverNF"
-          :step="0.01"
-          :min="0"
-          @update="(v) => form.receiverNF = v"
-        />
-        <FormField
-          label="File Format"
-          type="select"
-          :value="form.fileFormat"
-          :options="formatOptions"
-          @update="onFormatChange"
-        />
-        <FormField
-          label="Far Field Table (FFTab) file"
-          :memo="currentFileMeta.accept"
-          type="file"
-          :accept="currentFileMeta.accept"
-          @update="onFileUpdate"
-        />
-        <FormField
+        <Field label="Sky Temperature" memo="K" required :min="0" :max="9999999">
+          <NumberInput
+            v-model="form.skyTemp"
+            :min="0"
+            :max="9999999"
+            :step="1"
+          />
+        </Field>
+
+        <Field label="Earth Temperature" memo="K" required :min="0" :max="9999999">
+          <NumberInput
+            v-model="form.earthTemp"
+            :min="0"
+            :max="9999999"
+            :step="1"
+          />
+        </Field>
+
+        <Field label="Trans. Line Loss" memo="dB" required :min="0">
+          <NumberInput
+            v-model="form.translineLoss"
+            :min="0"
+            :step="0.01"
+          />
+        </Field>
+
+        <Field label="Receiver NF" memo="dB" required :min="0">
+          <NumberInput
+            v-model="form.receiverNF"
+            :min="0"
+            :step="0.01"
+          />
+        </Field>
+
+        <Field label="File Format" required>
+          <SelectInput
+            :model-value="form.fileFormat"
+            :options="formatOptions"
+            @update:model-value="onFormatChange"
+          />
+        </Field>
+
+        <Field
+          label="File"
+          required
+        >
+          <FileInput
+            :accept="currentFileMeta.accept"
+            @update:model-value="onFileUpdate"
+          />
+        </Field>
+
+        <Field
           v-if="currentFileMeta.showFreq"
           label="Frequency"
           memo="MHz"
-          type="number"
-          :value="form.frequency"
+          required
           :min="0.1"
-          :step="0.001"
-          @update="(v) => form.frequency = v"
-        />
+        >
+          <NumberInput
+            v-model="form.frequency"
+            :min="0.1"
+            :step="0.001"
+          />
+        </Field>
 
-        <div class="mt-8 pt-4">
+        <div class="mt-4 pt-4">
           <button
             :disabled="loading"
             class="rounded bg-sky-600 px-6 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

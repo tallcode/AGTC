@@ -14,15 +14,14 @@ async function exportPNG() {
   if (!cardRef.value)
     return
 
-  const html2canvas = (await import('html2canvas')).default
-  const canvas = await html2canvas(cardRef.value, {
+  const { toPng } = await import('html-to-image')
+  const dataUrl = await toPng(cardRef.value, {
     backgroundColor: '#000000',
-    scale: 2,
-    useCORS: true,
+    pixelRatio: 2,
   })
   const link = document.createElement('a')
   link.download = 'agtc-result.png'
-  link.href = canvas.toDataURL('image/png')
+  link.href = dataUrl
   link.click()
 }
 
