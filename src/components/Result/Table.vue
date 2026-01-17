@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ResultRow } from '../types'
+import type { ResultRow } from '@/types'
 
 defineProps<{ rows: ResultRow[] }>()
 

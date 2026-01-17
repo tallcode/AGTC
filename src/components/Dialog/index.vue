@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { useDialog } from '../lib/modal'
+import { useDialog } from '@/lib/modal'
 
 const dialog = ref<HTMLDialogElement>()
 const { state, close } = useDialog()

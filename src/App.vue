@@ -3,12 +3,20 @@ import type { SelectOption } from '@/components/Form/types'
 import type { FFTable, Result } from '@/types'
 import { computed, reactive, ref } from 'vue'
 import { Field, FileInput, NumberInput, SelectInput } from '@/components/Form'
-import ResultCard from '@/components/ResultCard.vue'
+import ResultCard from '@/components/Result/index.vue'
 import { calculateMetrics } from '@/lib/calculate'
 import { calibration, detect } from '@/lib/calibration'
 import { useDialog } from '@/lib/modal'
 import { parseFFE, parseFFTab, parseMMANA } from '@/lib/parser'
 import { validateFFTab } from '@/lib/validations'
+
+// DOM Refs
+const skyTempField = ref<InstanceType<typeof Field> | null>(null)
+const earthTempField = ref<InstanceType<typeof Field> | null>(null)
+const translineLossField = ref<InstanceType<typeof Field> | null>(null)
+const receiverNFField = ref<InstanceType<typeof Field> | null>(null)
+const fileField = ref<InstanceType<typeof Field> | null>(null)
+const frequencyField = ref<InstanceType<typeof Field> | null>(null)
 
 // Setup State
 const loading = ref(false)
@@ -64,15 +72,21 @@ async function handleCalculate() {
 
   try {
     // Validation
+    const checks = [
+      skyTempField.value?.validate(form.skyTemp),
+      earthTempField.value?.validate(form.earthTemp),
+      translineLossField.value?.validate(form.translineLoss),
+      receiverNFField.value?.validate(form.receiverNF),
+      fileField.value?.validate(form.file),
+      currentFileMeta.value.showFreq ? frequencyField.value?.validate(form.frequency) : true,
+    ]
+
+    if (checks.includes(false)) {
+      return
+    }
+
     if (!form.file)
       throw new Error('Please select an antenna pattern file.')
-    if (form.skyTemp <= 0)
-      throw new Error('Sky temperature must be > 0 K.')
-    if (form.earthTemp <= 0)
-      throw new Error('Earth temperature must be > 0 K.')
-    if (form.fileFormat === 'mmana' && (!form.frequency || form.frequency <= 0)) {
-      throw new Error('MMANA format requires a valid frequency (MHz).')
-    }
 
     const fileText = await form.file.text()
     let data: FFTable
@@ -132,7 +146,7 @@ async function handleCalculate() {
   <div class="min-h-screen bg-neutral-900 text-slate-200 py-10 px-4 md:px-8">
     <div class="max-w-2xl mx-auto space-y-8">
       <!-- Header -->
-      <header class="space-y-1 mb-8">
+      <header class="space-y-1 mb-8 px-4">
         <h1 class="text-2xl font-bold text-white tracking-wide">
           AGTC Web Utility
         </h1>
@@ -142,62 +156,72 @@ async function handleCalculate() {
         </div>
       </header>
 
-      <!-- Input Form -->
-      <div class="space-y-6">
-        <Field label="Sky Temperature" memo="K" required :min="0" :max="9999999">
-          <NumberInput
-            v-model="form.skyTemp"
-            :min="0"
-            :max="9999999"
-            :step="1"
-          />
-        </Field>
+      <ResultCard
+        v-if="result" :data="result"
+        @reset="result = null"
+      />
+      <div v-else class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field ref="skyTempField" label="Sky Temperature" memo="K" required :min="0" :max="9999999">
+            <NumberInput
+              v-model="form.skyTemp"
+              :min="0"
+              :max="9999999"
+              :step="1"
+            />
+          </Field>
 
-        <Field label="Earth Temperature" memo="K" required :min="0" :max="9999999">
-          <NumberInput
-            v-model="form.earthTemp"
-            :min="0"
-            :max="9999999"
-            :step="1"
-          />
-        </Field>
+          <Field ref="earthTempField" label="Earth Temperature" memo="K" required :min="0" :max="9999999">
+            <NumberInput
+              v-model="form.earthTemp"
+              :min="0"
+              :max="9999999"
+              :step="1"
+            />
+          </Field>
 
-        <Field label="Trans. Line Loss" memo="dB" required :min="0">
-          <NumberInput
-            v-model="form.translineLoss"
-            :min="0"
-            :step="0.01"
-          />
-        </Field>
+          <Field ref="translineLossField" label="Trans. Line Loss" memo="dB" required :min="0">
+            <NumberInput
+              v-model="form.translineLoss"
+              :min="0"
+              :step="0.01"
+            />
+          </Field>
 
-        <Field label="Receiver NF" memo="dB" required :min="0">
-          <NumberInput
-            v-model="form.receiverNF"
-            :min="0"
-            :step="0.01"
-          />
-        </Field>
-
-        <Field label="File Format" required>
-          <SelectInput
-            :model-value="form.fileFormat"
-            :options="formatOptions"
-            @update:model-value="onFormatChange"
-          />
-        </Field>
+          <Field ref="receiverNFField" label="Receiver NF" memo="dB" required :min="0">
+            <NumberInput
+              v-model="form.receiverNF"
+              :min="0"
+              :step="0.01"
+            />
+          </Field>
+        </div>
 
         <Field
+          ref="fileField"
           label="File"
           required
         >
-          <FileInput
-            :accept="currentFileMeta.accept"
-            @update:model-value="onFileUpdate"
-          />
+          <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 divide-gray-700">
+            <div class="sm:w-1/3 min-w-37.5">
+              <SelectInput
+                :model-value="form.fileFormat"
+                :options="formatOptions"
+                @update:model-value="onFormatChange"
+              />
+            </div>
+            <div class="flex-1">
+              <FileInput
+                :accept="currentFileMeta.accept"
+                @update:model-value="onFileUpdate"
+              />
+            </div>
+          </div>
         </Field>
 
         <Field
           v-if="currentFileMeta.showFreq"
+          ref="frequencyField"
           label="Frequency"
           memo="MHz"
           required
@@ -216,13 +240,10 @@ async function handleCalculate() {
             class="rounded bg-sky-600 px-6 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             @click="handleCalculate"
           >
-            {{ loading ? 'Calculating...' : 'Calculate' }}
+            Calculate
           </button>
         </div>
       </div>
-
-      <!-- Result Card -->
-      <ResultCard v-if="result" :data="result" />
     </div>
   </div>
 </template>

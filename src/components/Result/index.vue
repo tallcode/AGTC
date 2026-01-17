@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import type { Result } from '../types'
+import type { Result } from '@/types'
 import { ref } from 'vue'
-import ResultTable from './ResultTable.vue'
+import ResultTable from './Table.vue'
 
 const props = defineProps<{ data: Result }>()
+defineEmits<{
+  (e: 'reset'): void
+}>()
 
 const { avgGainNum, avgGaindB, La, maxGainVal, maxPhi, maxTheta, skyTemp, earthTemp, rows, systemAt30 } = props.data
 const { GTsys, receiverTemp, transLineTemp } = systemAt30
@@ -47,6 +50,26 @@ function exportCSV() {
 
 <template>
   <div class="space-y-4 font-mono">
+    <div class="flex justify-end gap-3 pt-2">
+      <button
+        class="rounded bg-green-600 hover:bg-green-500 border border-[rgba(27,31,36,0.15)] px-4 py-1.5 text-sm font-bold text-white shadow transition-colors"
+        @click="exportPNG"
+      >
+        Export PNG
+      </button>
+      <button
+        class="rounded bg-green-600 hover:bg-green-500 border border-[rgba(27,31,36,0.15)] px-4 py-1.5 text-sm font-bold text-white shadow transition-colors"
+        @click="exportCSV"
+      >
+        Export CSV
+      </button>
+      <button
+        class="rounded bg-neutral-600 hover:bg-neutral-500 border border-[rgba(27,31,36,0.15)] px-4 py-1.5 text-sm font-bold text-white shadow transition-colors"
+        @click="$emit('reset')"
+      >
+        Reset
+      </button>
+    </div>
     <div ref="cardRef" class="bg-black p-6 rounded-md border border-gray-800">
       <header class="mb-4 text-sm leading-relaxed text-white">
         <div>
@@ -72,21 +95,6 @@ function exportCSV() {
           Computed AG >= 1.001, G/Ta calculation might be invalid.
         </div>
       </footer>
-    </div>
-
-    <div class="flex gap-3 pt-2">
-      <button
-        class="rounded bg-green-600 hover:bg-green-500 border border-[rgba(27,31,36,0.15)] px-4 py-1.5 text-sm font-bold text-white shadow transition-colors"
-        @click="exportPNG"
-      >
-        Export PNG
-      </button>
-      <button
-        class="rounded bg-green-600 hover:bg-green-500 border border-[rgba(27,31,36,0.15)] px-4 py-1.5 text-sm font-bold text-white shadow transition-colors"
-        @click="exportCSV"
-      >
-        Export CSV
-      </button>
     </div>
   </div>
 </template>

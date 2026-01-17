@@ -16,14 +16,14 @@ const props = defineProps<{
 const internalError = ref<string | null>(null)
 const isError = computed(() => !!internalError.value)
 
-function validate(value: any) {
+function validate(value: any): boolean {
   internalError.value = null
 
   if (props.required) {
     const isEmpty = value === null || value === undefined || value === ''
     if (isEmpty) {
       internalError.value = `${props.label} is Required`
-      return
+      return false
     }
   }
 
@@ -32,11 +32,11 @@ function validate(value: any) {
     if (!Number.isNaN(numVal)) {
       if (props.min !== undefined && numVal < props.min) {
         internalError.value = `${props.label} must be >= ${props.min}`
-        return
+        return false
       }
       if (props.max !== undefined && numVal > props.max) {
         internalError.value = `${props.label} must be <= ${props.max.toLocaleString()}`
-        return
+        return false
       }
     }
   }
@@ -47,14 +47,16 @@ function validate(value: any) {
       // If validation fails
       if (result === false) {
         internalError.value = rule.message || 'Validation failed'
-        return
+        return false
       }
       if (typeof result === 'string') {
         internalError.value = result
-        return
+        return false
       }
     }
   }
+
+  return true
 }
 
 function setError(err: string | null) {

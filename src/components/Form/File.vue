@@ -2,7 +2,7 @@
 import { inject } from 'vue'
 import { FieldContextKey } from './types'
 
-const props = defineProps<{
+defineProps<{
   modelValue?: File | null
   accept?: string
 }>()
@@ -21,12 +21,6 @@ function onChange(e: Event) {
     field.validate(file)
   }
 }
-
-function onBlur() {
-  if (field) {
-    field.validate(props.modelValue)
-  }
-}
 </script>
 
 <template>
@@ -34,8 +28,21 @@ function onBlur() {
     type="file"
     v-bind="$attrs"
     :accept="accept"
-    class="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 rounded bg-transparent border-0 py-3 px-3 focus:ring-0 outline-none"
+    class="file-input block w-full text-base text-gray-200 bg-transparent border-0 px-3 py-3 focus:ring-0 outline-none cursor-pointer"
     @change="onChange"
-    @blur="onBlur"
   >
 </template>
+
+<style scoped>
+.file-input::file-selector-button {
+  display: none;
+}
+
+.file-input::-webkit-file-upload-button {
+  display: none;
+}
+
+.file-input::-ms-browse {
+  display: none;
+}
+</style>
