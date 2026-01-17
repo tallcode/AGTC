@@ -5,8 +5,9 @@ import { computed, reactive, ref } from 'vue'
 import FormField from './components/FormField.vue'
 import ResultCard from './components/ResultCard.vue'
 import { calculateMetrics } from './lib/calculate'
+import { applyCalibration } from './lib/calibration'
 import { useDialog } from './lib/modal'
-import { applyCalibration, parseFFE, parseFFTab, parseMMANA } from './lib/parse'
+import { parseFFE, parseFFTab, parseMMANA } from './lib/parser'
 import { validateFFTab } from './lib/validations'
 
 // Setup State
