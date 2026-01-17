@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mmana2fftab_v0.4</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 0.7rem;
+            font-size: 1.4rem;
+        }
+        h2 {
+            color: #A6A09B;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            font-weight: normal;
+        }
+        .instruction-box {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            text-align: left;
+            font-size: 0.9rem;
+            border: 1px solid #bbdefb;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            line-height: 1.5;
+        }
+        .instruction-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+            font-family: "Segoe UI", sans-serif;
+        }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem; }
+        input[type="file"], select, input[type="number"] {
+            display: block; width: 100%; padding: 10px;
+            border: 1px solid #ccc; border-radius: 4px;
+            font-size: 1rem; background-color: #fff; box-sizing: border-box;
+        }
+        input[type="file"] { border: 2px dashed #ddd; cursor: pointer; }
+        input[type="file"]:hover { border-color: #3498db; }
+        button {
+            width: 100%; padding: 12px; background-color: #3498db; color: white;
+            border: none; border-radius: 4px; font-size: 1rem;
+            cursor: pointer; transition: background 0.3s; font-weight: 600;
+        }
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+        .info-box {
+            background-color: #e8f6f3; border-left: 4px solid #1abc9c;
+            padding: 15px; margin-top: 20px; font-size: 0.9rem; display: none;
+        }
+        .info-item { margin-bottom: 6px; }
+        .warning-text { color: #d32f2f; font-weight: bold; }
+        .error-box {
+            background-color: #fdeded; border-left: 4px solid #e74c3c;
+            padding: 10px; margin-top: 20px; font-size: 0.9rem; color: #c0392b; display: none;
+        }
+        .calibration-box {
+            background-color: #fff8e1; border: 1px solid #ffecb3; border-radius: 4px;
+            padding: 15px; margin-top: 15px; display: none; 
+        }
+        .calibration-title {
+            font-weight: bold; color: #f57c00; margin-bottom: 10px; font-size: 0.95rem;
+        }
+        .checkbox-group { display: flex; gap: 20px; align-items: center; }
+        .checkbox-label {
+            display: flex; align-items: center; font-weight: normal;
+            cursor: pointer; user-select: none;
+        }
+        .checkbox-label input { margin-right: 8px; width: 18px; height: 18px; cursor: pointer; }
+        #step2 { display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .loading { display: none; text-align: center; margin-top: 10px; color: #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>远场数据格式转换工具&nbsp;&nbsp;——&nbsp;&nbsp;MMANA2FFtab_v0.4</h1>
+	<h1>MMANA-GAL(*.csv) —> NEC FFtab(*.txt)</h1>
+	<h2>by&nbsp;&nbsp;BG5TOX&nbsp;&nbsp;2026.01.13</h2>
+
+    <div class="instruction-box">
+        <span class="instruction-title">MMANA-GAL 导出设置指南：</span>
+			1、在预设的参数下正常完成天线模型仿真计算
+		<br>2、打开File菜单
+		<br>3、选择Table of Angle/Gain(*.csv)
+		<br>4、设置输出参数：
+		<br>&nbsp;&nbsp&nbsp;&nbsp;[ <b>Azimuth-方位角</b>] Start deg.：<b>0</b> , Step deg.：<b>1</b> , Num. of steps：<b>361</b>
+		<br>&nbsp;&nbsp&nbsp;&nbsp;[ <b>Zenith-天顶角</b> ] Start deg.：<b>0</b> , Step deg.：<b>1</b> , Num. of steps：<b>181</b>
+		<br>5、设置输出文件路径（含文件名）
+		<br>6、点击OK
+    </div>
+    
+    <div class="form-group">
+        <label for="fileInput">1. 上传从MMANA-GAL导出的 .csv 文件</label>
+        <input type="file" id="fileInput" accept=".csv,.txt">
+    </div>
+
+    <div class="form-group">
+        <label for="freqInput">2. 确认频率 (MHz)
+		<span style="font-weight:normal; font-size:0.85rem; color:#666;">&nbsp;&nbsp;*CSV中不包含频率信息，需人工补齐。</span>
+        <input type="number" id="freqInput" placeholder="例如: 432.0" value="" step="0.1">
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+
+    <div id="step2">
+        <div id="infoBox" class="info-box"></div>
+
+        <div id="calibrationBox" class="calibration-box">
+            <div class="calibration-title">⚠ 零位校准（慎用，会引入数值误差）</div>
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checkZeroAzimuth" onchange="recalcData()">
+                    方位角归零 (Azimuth to 0°)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checkZeroElevation" onchange="recalcData()">
+                    俯仰角归零 (Elevation to 0°)
+                </label>
+            </div>
+            <div style="font-size: 0.8rem; color: #666; margin-top:8px; line-height:1.4;">
+                <strong>功能说明：</strong> 
+				<br>可将最大增益点旋转对齐至零位。
+				<br>(如果解析到输入文件的最大增益点的Theta ≠ 90.00°, Phi ≠ 0.00°)
+				<br>未勾选时，输出数据将严格保持输入文件的角度范围。
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 20px;">
+            <div class="col">
+                <div class="form-group">
+                    <label for="patternType">3. 切片模式</label>
+                    <select id="patternType" onchange="updateAngleOptions()">
+                        <option value="azimuth">Azimuth (变 Phi)</option>
+                        <option value="elevation">Elevation (变 Theta)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="angleSelect">4. 选择切片角度</label>
+                    <select id="angleSelect">
+                        <option value="ALL">-- 导出所有 (合并单文件) --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-label" id="descText">
+            Azimuth 模式：固定 Theta，导出随 Phi 变化的数据。
+        </div>
+
+        <button id="convertBtn" onclick="handleDownload()">转换并下载</button>
+        <div id="loadingText" class="loading">正在处理中...</div>
+    </div>
+</div>
+
+<script>
+    let rawGrid = null; 
+    let processedData = []; 
+    let metaData = {
+        frequency: 0,
+        baseFilename: "Pattern",
+        freqMhz: "432",
+        maxGain: { val: -Infinity, theta: 0, phi: 0 },
+        rawStats: { theta: {}, phi: {} } 
+    };
+
+    const fileInput = document.getElementById('fileInput');
+    const freqInput = document.getElementById('freqInput');
+    const step2 = document.getElementById('step2');
+    const patternTypeSelect = document.getElementById('patternType');
+    const angleSelect = document.getElementById('angleSelect');
+    const descText = document.getElementById('descText');
+    const infoBox = document.getElementById('infoBox');
+    const errorBox = document.getElementById('errorBox');
+    const loadingText = document.getElementById('loadingText');
+    const convertBtn = document.getElementById('convertBtn');
+    const calibrationBox = document.getElementById('calibrationBox');
+    const checkZeroAzimuth = document.getElementById('checkZeroAzimuth');
+    const checkZeroElevation = document.getElementById('checkZeroElevation');
+
+    const DEG2RAD = Math.PI / 180.0;
+    const RAD2DEG = 180.0 / Math.PI;
+
+    freqInput.addEventListener('input', function(e) {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val)) {
+            metaData.freqMhz = val.toString();
+            if (processedData.length > 0) updateInfoDisplay();
+        }
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const fVal = parseFloat(freqInput.value);
+        metaData.freqMhz = isNaN(fVal) ? "0" : fVal.toString();
+        metaData.baseFilename = file.name.replace(/\.[^/.]+$/, "");
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                parseMMANA(e.target.result);
+                errorBox.style.display = 'none';
+                step2.style.display = 'block';
+                
+                checkZeroElevation.checked = (Math.abs(metaData.maxGain.theta - 90) > 0.1);
+                checkZeroAzimuth.checked = (Math.abs(metaData.maxGain.phi - 0) > 0.1 && Math.abs(metaData.maxGain.phi - 360) > 0.1);
+
+                recalcData(); 
+            } catch (err) {
+                showError("解析文件失败: " + err.message);
+                step2.style.display = 'none';
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+    }
+
+    function parseMMANA(content) {
+        const lines = content.split(/\r?\n/);
+        
+        // rawGrid[theta][phi] -> Size: 181 * 361
+        rawGrid = new Array(181).fill(null).map(() => new Array(361).fill(null));
+
+        let maxVal = -Infinity;
+        let maxPoint = { theta: 0, phi: 0 };
+        let count = 0;
+
+        for (let line of lines) {
+            line = line.trim();
+            if (line.length === 0) continue;
+            const parts = line.split(',');
+            if (parts.length < 5) continue;
+            if (isNaN(parseFloat(parts[0]))) continue; 
+
+            const theta = Math.round(parseFloat(parts[0])); 
+            const phi = Math.round(parseFloat(parts[1]));   
+            const gainV = parseFloat(parts[2]); 
+            const gainH = parseFloat(parts[3]); 
+            const gainTot = parseFloat(parts[4]);
+
+            if (theta >= 0 && theta <= 180 && phi >= 0 && phi <= 360) {
+                rawGrid[theta][phi] = { gainV, gainH, gainTot };
+                count++;
+                if (gainTot > maxVal) { maxVal = gainTot; maxPoint = { theta, phi }; }
+            }
+        }
+
+        if (count < 100) throw new Error("有效数据过少，请检查是否按照 Azimuth 0-360, Zenith 0-180 导出。");
+
+        metaData.rawStats = {
+            theta: { min: 0, max: 180, step: 1 },
+            phi: { min: 0, max: 360, step: 1 }
+        };
+        metaData.maxGain = { val: maxVal, theta: maxPoint.theta, phi: maxPoint.phi };
+    }
+
+    // 双线性插值
+    function getInterpolatedValue(theta, phi) {
+        let p = phi % 360;
+        if (p < 0) p += 360;
+        
+        let t = theta;
+        if (t < 0) t = 0; 
+        if (t > 180) t = 180;
+        
+        let t0 = Math.floor(t);
+        let t1 = Math.ceil(t);
+        let p0 = Math.floor(p);
+        let p1 = Math.ceil(p);
+
+        if (t0 === t1 && p0 === p1) {
+             return rawGrid[t0][p0] || { gainV: -999, gainH: -999, gainTot: -999 };
+        }
+
+        let v00 = rawGrid[t0][p0];
+        let v01 = rawGrid[t0][p1] || rawGrid[t0][0]; 
+        let v10 = rawGrid[t1][p0];
+        let v11 = rawGrid[t1][p1] || rawGrid[t1][0];
+
+        const DEF = { gainV: -999, gainH: -999, gainTot: -999 };
+        if (!v00) v00 = DEF; if (!v11) v11 = DEF; if (!v01) v01 = DEF; if (!v10) v10 = DEF;
+
+        let st = t - t0;
+        let sp = p - p0;
+
+        const lerp = (a, b, w) => a + (b - a) * w;
+        
+        const interpField = (key) => {
+            let top = lerp(v00[key], v01[key], sp);
+            let bot = lerp(v10[key], v11[key], sp);
+            return lerp(top, bot, st);
+        };
+
+        return {
+            gainV: interpField('gainV'),
+            gainH: interpField('gainH'),
+            gainTot: interpField('gainTot')
+        };
+    }
+
+    // --- 核心算法：球面三角逆向重采样 (Spherical Trigonometry Inverse Resampling) ---
+    function recalcData() {
+        processedData = [];
+        
+        const rotateAz = checkZeroAzimuth.checked;
+        const rotateEl = checkZeroElevation.checked;
+
+        // 1. 计算需要的旋转角度
+        //    OffsetPhi: 方位角偏移量
+        //    delta: 俯仰角旋转量。注意：我们希望将 Peak(Theta_max) 移到 90。
+        //           在正向逻辑中，这是 + (90 - Theta_max)。
+        //           在逆向逻辑中，我们需要从 Target(90) 找回 Source(Theta_max)，
+        //           这对应于旋转角度 beta = -(90 - Theta_max) = Theta_max - 90。
+        
+        const offsetPhi = rotateAz ? -metaData.maxGain.phi : 0; 
+        
+        // 俯仰旋转角 beta (Spherical Rotation Angle around Y-axis direction)
+        // 这里的逻辑是：如果目标是 T, 我们要找源 S.
+        // 根据正向旋转 T = S + shift -> S = T - shift.
+        // shift = 90 - maxTheta. 所以 beta = -(90 - maxTheta).
+        const betaRad = rotateEl ? (metaData.maxGain.theta - 90) * DEG2RAD : 0;
+        
+        // 预计算三角函数，减少循环内开销
+        const cosBeta = Math.cos(betaRad);
+        const sinBeta = Math.sin(betaRad);
+
+        // 2. 遍历标准输出网格 (Theta 0-180, Phi 0-360)
+        //    通过逆向计算找到原始坐标 (theta_src, phi_src)
+        for (let t = 0; t <= 180; t++) {
+            const tRad = t * DEG2RAD;
+            const sinT = Math.sin(tRad);
+            const cosT = Math.cos(tRad);
+
+            for (let p = 0; p <= 360; p++) {
+                const pRad = p * DEG2RAD;
+                const sinP = Math.sin(pRad);
+                const cosP = Math.cos(pRad);
+
+                // --- 步骤 A: 俯仰角逆变换 (Spherical Inverse Rotation around Y-axis) ---
+                // 我们使用球面旋转公式直接计算 z_src 和 x_src 的分量，不经过 x,y,z 变量
+                // 公式依据：
+                // z_src = z_tgt * cos(beta) - x_tgt * sin(beta)
+                // 其中 x_tgt = sinT * cosP, z_tgt = cosT
+                
+                // 1. 计算原始坐标的 Z 分量 (对应 cos(theta_src))
+                //    Cos(Theta_src) = Cos(T)Cos(beta) - Sin(T)Cos(P)Sin(beta)
+                let z_src = cosT * cosBeta - sinT * cosP * sinBeta;
+
+                // 2. 严格钳位 (Fix "Calculation Error")
+                //    防止浮点误差 (如 1.000000002) 导致 acos 返回 NaN
+                if (z_src > 1.0) z_src = 1.0;
+                if (z_src < -1.0) z_src = -1.0;
+
+                let theta_src_rad = Math.acos(z_src);
+                let theta_src = theta_src_rad * RAD2DEG;
+
+                // 3. 计算原始坐标的 Phi
+                //    我们需要计算对应的 y_src 和 x_src
+                //    y_src = y_tgt = sinT * sinP
+                //    x_src = x_tgt * cos(beta) + z_tgt * sin(beta)
+                //          = sinT * cosP * cosBeta + cosT * sinBeta
+                
+                let y_src = sinT * sinP;
+                let x_src = sinT * cosP * cosBeta + cosT * sinBeta;
+
+                let phi_src_rad = Math.atan2(y_src, x_src);
+                let phi_src = phi_src_rad * RAD2DEG; // Range: -180 to 180
+
+                // --- 步骤 B: 方位角逆变换 ---
+                // phi_src_final = phi_src_rotated - offsetPhi
+                // (因为 Forward: New = Old + Offset => Inverse: Old = New - Offset)
+                // 此时 phi_src 是经过俯仰旋转后的中间方位角
+                
+                phi_src = phi_src - offsetPhi;
+
+                // 归一化到 [0, 360)
+                phi_src = phi_src % 360;
+                if (phi_src < 0) phi_src += 360;
+
+                // --- 步骤 C: 插值获取数据 ---
+                const val = getInterpolatedValue(theta_src, phi_src);
+
+                processedData.push({
+                    theta: t,
+                    phi: p,
+                    gainV: val.gainV,
+                    gainH: val.gainH,
+                    gainTot: val.gainTot
+                });
+            }
+        }
+        
+        updateInfoDisplay();
+        updateAngleOptions();
+    }
+
+    function updateInfoDisplay() {
+        const theta = metaData.maxGain.theta;
+        const phi = metaData.maxGain.phi;
+        const val = metaData.maxGain.val.toFixed(2);
+        const isElZero = Math.abs(theta - 90) < 0.1;
+        const isAzZero = Math.abs(phi - 0) < 0.1 || Math.abs(phi - 360) < 0.1;
+        const thetaClass = !isElZero ? "warning-text" : "";
+        const phiClass = !isAzZero ? "warning-text" : "";
+
+        calibrationBox.style.display = "block";
+        const tRaw = metaData.rawStats.theta;
+        const pRaw = metaData.rawStats.phi;
+
+        infoBox.style.display = "block";
+        infoBox.innerHTML = `
+            <div class="info-item"><strong>解析统计:</strong> 频率 ${metaData.freqMhz} MHz, 最大增益: ${val} dBi</div>
+            <div class="info-item">
+                <strong>最大增益位置:</strong> 
+                Theta = <span class="${thetaClass}">${theta.toFixed(2)}°</span>, 
+                Phi = <span class="${phiClass}">${phi.toFixed(2)}°</span>
+            </div>
+            <div class="info-item" style="color:#666; font-size:0.85rem; margin-top:5px;">
+                输出格式将固定为标准网格：Theta [0..180], Phi [0..360]
+            </div>
+        `;
+    }
+
+    function getUniqueValues(key) {
+        if (key === 'theta') return Array.from({length: 181}, (_, i) => i);
+        if (key === 'phi') return Array.from({length: 361}, (_, i) => i);
+        return [];
+    }
+
+    function updateAngleOptions() {
+        const type = patternTypeSelect.value;
+        const currentSelection = angleSelect.value;
+        angleSelect.innerHTML = '';
+        const optAll = document.createElement('option');
+        optAll.value = "ALL";
+        optAll.textContent = "导出所有 (合并单文件)";
+        angleSelect.appendChild(optAll);
+
+        let values = [];
+        let labelUnit = "";
+        if (type === 'azimuth') {
+            values = getUniqueValues('theta');
+            descText.textContent = "Azimuth 模式：固定 Theta，输出随 Phi 变化的数据。";
+            labelUnit = "Theta = ";
+        } else {
+            values = getUniqueValues('phi');
+            descText.textContent = "Elevation 模式：固定 Phi，输出随 Theta 变化的数据。";
+            labelUnit = "Phi = ";
+        }
+
+        let foundPrev = false;
+        values.forEach(val => {
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = `${labelUnit}${val} deg`;
+            angleSelect.appendChild(option);
+            if (val.toString() === currentSelection) foundPrev = true;
+        });
+        if (foundPrev && currentSelection !== "ALL") angleSelect.value = currentSelection;
+        else angleSelect.selectedIndex = 0;
+    }
+
+    function fmt(num, width) {
+        let s = num.toFixed(2);
+        while (s.length < width) s = " " + s;
+        return s;
+    }
+    
+    function fmtInt(num, width) {
+        let s = Math.round(num).toString();
+        while (s.length < width) s = " " + s;
+        return s;
+    }
+
+    function generateGlobalHeader() {
+        let h = "";
+        h += "                      mmana2fftab_v0.4 by BG5TOX\r\n\r\n";
+        h += `${metaData.baseFilename}, Converted from MMANA-GAL\r\n\r\n`;
+        h += "         --------------- FAR-FIELD PATTERN DATA ---------------\r\n\r\n";
+        h += `Frequency = ${metaData.freqMhz} Mhz\r\n\r\n`;
+        h += "   Reference = 0 dBi\r\n\r\n";
+        return h;
+    }
+
+    function generateSliceHeader(fixedAngleVal, type) {
+        let h = "";
+        let patternName = "", varyColName = "Deg", fixedLabel = "";
+        if (type === 'azimuth') {
+            fixedLabel = `Theta angle = ${fixedAngleVal} deg`;
+            patternName = "Azimuth Pattern";
+        } else {
+            fixedLabel = `Phi angle = ${fixedAngleVal} deg`;
+            patternName = "Elevation Pattern";
+        }
+        h += `${patternName}   ${fixedLabel}\r\n`;
+        h += `${varyColName}    V dB      H dB      Tot dB\r\n`;
+        return h;
+    }
+
+    function getSliceDataLines(fixedAngleVal, type) {
+        let cutData = [];
+        const EPS = 0.1;
+
+        if (type === 'azimuth') {
+            cutData = processedData.filter(d => Math.abs(d.theta - fixedAngleVal) < EPS);
+        } else {
+            cutData = processedData.filter(d => Math.abs(d.phi - fixedAngleVal) < EPS);
+        }
+
+        if (cutData.length === 0) return "";
+        let lines = "";
+        cutData.forEach(d => {
+            let degVal = (type === 'azimuth') ? d.phi : d.theta;
+            lines += `${fmtInt(degVal, 3)}${fmt(d.gainV, 9)}${fmt(d.gainH, 10)}${fmt(d.gainTot, 10)}\r\n`;
+        });
+        lines += "\r\n";
+        return lines;
+    }
+
+    async function handleDownload() {
+        const type = patternTypeSelect.value;
+        const selectedVal = angleSelect.value;
+        convertBtn.disabled = true; loadingText.style.display = 'block';
+        await new Promise(r => setTimeout(r, 50));
+        try {
+            if (selectedVal === "ALL") downloadCombined(type);
+            else downloadSingle(parseFloat(selectedVal), type);
+        } catch (e) { alert("错误: " + e.message); } 
+        finally { convertBtn.disabled = false; loadingText.style.display = 'none'; }
+    }
+
+    function downloadSingle(angle, type) {
+        let content = generateGlobalHeader();
+        content += generateSliceHeader(angle, type);
+        const dataStr = getSliceDataLines(angle, type);
+        if (!dataStr || dataStr.trim() === "") { alert("该角度无数据"); return; }
+        content += dataStr;
+        const tag = (type === 'azimuth') ? "Theta" : "Phi";
+        let suffix = (checkZeroAzimuth.checked || checkZeroElevation.checked) ? "_Aligned" : "";
+        triggerDownload(content, `${metaData.baseFilename}_${type}_${tag}_${angle}${suffix}.txt`);
+    }
+
+    function downloadCombined(type) {
+        let values = [];
+        if (type === 'azimuth') values = getUniqueValues('theta');
+        else values = getUniqueValues('phi');
+        let combinedContent = generateGlobalHeader();
+        let count = 0;
+        values.forEach((val) => {
+            const dataStr = getSliceDataLines(val, type);
+            if (dataStr && dataStr.trim() !== "") {
+                combinedContent += generateSliceHeader(val, type);
+                combinedContent += dataStr;
+                count++;
+            }
+        });
+        if (count === 0) { alert("无有效数据可导出"); return; }
+        let suffix = (checkZeroAzimuth.checked || checkZeroElevation.checked) ? "_Aligned" : "";
+        triggerDownload(combinedContent, `${metaData.baseFilename}_${type}_All${suffix}.txt`);
+    }
+
+    function triggerDownload(content, filename) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>

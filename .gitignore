@@ -8,32 +8,20 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.npmrc
-.DS_Store
 dist
-coverage
+dist-ssr
 *.local
 
 # Editor directories and files
 .vscode/*
-!.vscode/settings.json
 !.vscode/extensions.json
-!.vscode/tailwind.json
 .idea
+.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Environment variables files
-/server/**/.env*
-keys
-
-# Prettier config
-.prettierrc
-.prettierrc.json
-.prettierrc.js
-.prettierrc.yml
-.prettierrc.yaml
-.prettier.config.js
+kit
+old

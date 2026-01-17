@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ffe2fftab_v0.5</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 0.7rem;
+            font-size: 1.4rem;
+        }
+	    h2 {
+            color: #A6A09B;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .sub-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+        input[type="file"], select {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+        input[type="file"] {
+            border: 2px dashed #ddd;
+            cursor: pointer;
+        }
+        input[type="file"]:hover {
+            border-color: #3498db;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .col {
+            flex: 1;
+        }
+        .info-box {
+            background-color: #e8f6f3;
+            border-left: 4px solid #1abc9c;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .info-item {
+            margin-bottom: 6px;
+        }
+        .warning-text {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .error-box {
+            background-color: #fdeded;
+            border-left: 4px solid #e74c3c;
+            padding: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #c0392b;
+            display: none;
+        }
+        
+        /* Calibration Section */
+        .calibration-box {
+            background-color: #fff8e1;
+            border: 1px solid #ffecb3;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none; 
+        }
+        .calibration-title {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            user-select: none;
+        }
+        .checkbox-label input {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        #step2 {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>远场数据格式转换工具&nbsp;&nbsp;——&nbsp;&nbsp;ffe2FFtab_v0.5</h1>
+	<h1>FEKO(.ffe) —> NEC FFtab(.txt)</h1>
+	<h2>by&nbsp;&nbsp;BG5TOX&nbsp;&nbsp;2026.01.13</h2>
+    
+    <div class="form-group">
+        <label for="fileInput">1. 上传 .ffe 文件</label>
+        <input type="file" id="fileInput" accept=".ffe,.txt">
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+
+    <div id="step2">
+        
+        <div id="infoBox" class="info-box"></div>
+
+        <div id="calibrationBox" class="calibration-box">
+            <div class="calibration-title">⚠ 零位校准 (检测到最大增益不在零位)</div>
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checkZeroAzimuth" onchange="recalcData()">
+                    方位角归零 (Azimuth to 0°)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checkZeroElevation" onchange="recalcData()">
+                    俯仰角归零 (Elevation to 0°)
+                </label>
+            </div>
+            <div style="font-size: 0.8rem; color: #666; margin-top:8px; line-height:1.4;">
+                <strong>功能说明：</strong> 将最大增益点旋转对齐至零位。<br>
+                未勾选时，输出数据将严格保持输入文件的角度范围（如 0-360°）。
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 20px;">
+            <div class="col">
+                <div class="form-group">
+                    <label for="patternType">2. 选择切片模式</label>
+                    <select id="patternType" onchange="updateAngleOptions()">
+                        <option value="azimuth">Azimuth (变 Phi)</option>
+                        <option value="elevation">Elevation (变 Theta)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="angleSelect">3. 选择切片角度</label>
+                    <select id="angleSelect">
+                        <option value="ALL">-- 所有角度 --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-label" id="descText">
+            Azimuth 模式：固定 Theta，导出随 Phi 变化的数据。
+        </div>
+
+        <button id="convertBtn" onclick="handleDownload()">转换并下载</button>
+        <div id="loadingText" class="loading">正在处理，请稍候...</div>
+    </div>
+</div>
+
+<script>
+    // Globals
+    let rawData = [];       // 原始数据
+    let processedData = []; // 处理后（导出用）的数据
+    
+    let metaData = {
+        frequency: 0,
+        baseFilename: "Pattern",
+        freqMhz: "0",
+        maxGain: { val: -Infinity, theta: 0, phi: 0 },
+        rawStats: { theta: {}, phi: {} } 
+    };
+
+    // UI Elements
+    const fileInput = document.getElementById('fileInput');
+    const step2 = document.getElementById('step2');
+    const patternTypeSelect = document.getElementById('patternType');
+    const angleSelect = document.getElementById('angleSelect');
+    const descText = document.getElementById('descText');
+    const infoBox = document.getElementById('infoBox');
+    const errorBox = document.getElementById('errorBox');
+    const loadingText = document.getElementById('loadingText');
+    const convertBtn = document.getElementById('convertBtn');
+    
+    const calibrationBox = document.getElementById('calibrationBox');
+    const checkZeroAzimuth = document.getElementById('checkZeroAzimuth');
+    const checkZeroElevation = document.getElementById('checkZeroElevation');
+
+    // Data Indices
+    const idxTheta = 0;
+    const idxPhi = 1;
+    const idxGainTheta = 6;
+    const idxGainPhi = 7;
+    const idxGainTotal = 8;
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        metaData.baseFilename = file.name.replace(/\.[^/.]+$/, "");
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                parseFFE(e.target.result);
+                errorBox.style.display = 'none';
+                step2.style.display = 'block';
+                
+                // 智能自动勾选逻辑
+                // 1. 如果最大增益 Theta != 90，默认勾选俯仰归零
+                const maxT = metaData.maxGain.theta;
+                if (Math.abs(maxT - 90) > 0.1) {
+                    checkZeroElevation.checked = true;
+                } else {
+                    checkZeroElevation.checked = false;
+                }
+
+                // 2. 如果最大增益 Phi != 0 (且不为 360)，默认勾选方位归零
+                const maxP = metaData.maxGain.phi;
+                if (Math.abs(maxP - 0) > 0.1 && Math.abs(maxP - 360) > 0.1) {
+                    checkZeroAzimuth.checked = true;
+                } else {
+                    checkZeroAzimuth.checked = false;
+                }
+
+                // Initial Process
+                recalcData(); 
+            } catch (err) {
+                showError("解析文件失败: " + err.message);
+                step2.style.display = 'none';
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+    }
+
+    function parseFFE(content) {
+        const lines = content.split(/\r?\n/);
+        rawData = []; 
+        let maxVal = -Infinity;
+        let maxPoint = { theta: 0, phi: 0 };
+        
+        const tSet = new Set();
+        const pSet = new Set();
+
+        for (let line of lines) {
+            line = line.trim();
+            if (line.length === 0) continue;
+
+            if (line.startsWith("#Frequency:") || line.startsWith("# Frequency:")) {
+                const parts = line.split(":");
+                if (parts.length > 1) metaData.frequency = parseFloat(parts[1].trim());
+            }
+
+            if (line.startsWith("#") || line.startsWith("*")) continue; 
+
+            const parts = line.trim().split(/\s+/);
+            
+            if (parts.length >= 9 && !isNaN(parseFloat(parts[0]))) {
+                const theta = parseFloat(parts[idxTheta]);
+                const phi = parseFloat(parts[idxPhi]);
+                const gainV = parseFloat(parts[idxGainTheta]);
+                const gainH = parseFloat(parts[idxGainPhi]);
+                const gainTot = parseFloat(parts[idxGainTotal]);
+
+                rawData.push({ theta, phi, gainV, gainH, gainTot });
+                
+                tSet.add(theta);
+                pSet.add(phi);
+
+                if (gainTot > maxVal) {
+                    maxVal = gainTot;
+                    maxPoint = { theta, phi };
+                }
+            }
+        }
+
+        if (rawData.length === 0) throw new Error("未在文件中找到有效的数据行。");
+
+        // Calculate Input Stats
+        const tArr = Array.from(tSet).sort((a,b)=>a-b);
+        const pArr = Array.from(pSet).sort((a,b)=>a-b);
+        metaData.rawStats.theta = calculateStats(tArr);
+        metaData.rawStats.phi = calculateStats(pArr);
+
+        metaData.maxGain = { val: maxVal, theta: maxPoint.theta, phi: maxPoint.phi };
+        
+        if (metaData.frequency > 1000000) {
+            metaData.freqMhz = (metaData.frequency / 1000000).toFixed(2);
+        } else {
+            metaData.freqMhz = metaData.frequency.toString();
+        }
+    }
+
+    function calculateStats(uniqueArr) {
+        if (uniqueArr.length === 0) return { min:0, max:0, step:0, count:0 };
+        const min = uniqueArr[0];
+        const max = uniqueArr[uniqueArr.length - 1];
+        let step = 0;
+        if (uniqueArr.length > 1) {
+            step = parseFloat(Math.abs(uniqueArr[1] - uniqueArr[0]).toFixed(4));
+        }
+        return { 
+            min: parseFloat(min.toFixed(2)), 
+            max: parseFloat(max.toFixed(2)), 
+            step: step, 
+            count: uniqueArr.length 
+        };
+    }
+
+    function recalcData() {
+        const rotateAz = checkZeroAzimuth.checked;
+        const rotateEl = checkZeroElevation.checked;
+
+        if (!rotateAz && !rotateEl) {
+            // 不进行任何校准时，直接复制原始数据
+            processedData = rawData.map(d => ({...d}));
+            processedData.sort((a, b) => {
+                if (Math.abs(a.theta - b.theta) > 0.001) return a.theta - b.theta;
+                return a.phi - b.phi;
+            });
+        } else {
+            const offsetPhi = rotateAz ? -metaData.maxGain.phi : 0;
+            const offsetTheta = rotateEl ? (90 - metaData.maxGain.theta) : 0;
+            const EPSILON = 1e-5; 
+
+            processedData = rawData.map(d => {
+                let t = d.theta + offsetTheta;
+                let p = d.phi + offsetPhi;
+
+                // Normalize Phi to 0-360
+                p = (p % 360);
+                if (p < 0) p += 360;
+
+                // 吸附边界 (Theta)
+                if (Math.abs(t) < 0.001) t = 0;
+                if (Math.abs(t - 180) < 0.001) t = 180;
+
+                // Theta 翻转逻辑
+                if (t < 0 - EPSILON) {
+                    t = -t;           
+                    p = (p + 180) % 360; 
+                } else if (t > 180 + EPSILON) {
+                    t = 360 - t;      
+                    p = (p + 180) % 360; 
+                }
+
+                // 再次吸附
+                if (Math.abs(t) < 0.001) t = 0;
+                if (Math.abs(t - 180) < 0.001) t = 180;
+                
+                // 吸附边界 (Phi) - 确保 360 实际上被计算为 0，然后在输出阶段补全 360
+                if (Math.abs(p - 360) < 0.001) p = 0;
+
+                return {
+                    theta: parseFloat(t.toFixed(4)), 
+                    phi: parseFloat(p.toFixed(4)),
+                    gainV: d.gainV,
+                    gainH: d.gainH,
+                    gainTot: d.gainTot
+                };
+            });
+
+            // Re-sort after rotation
+            processedData.sort((a, b) => {
+                if (Math.abs(a.theta - b.theta) > 0.001) return a.theta - b.theta;
+                return a.phi - b.phi;
+            });
+        }
+
+        updateInfoDisplay();
+        updateAngleOptions();
+    }
+
+    function updateInfoDisplay() {
+        const theta = metaData.maxGain.theta;
+        const phi = metaData.maxGain.phi;
+        const val = metaData.maxGain.val.toFixed(2);
+
+        const isElZero = Math.abs(theta - 90) < 0.1;
+        const isAzZero = Math.abs(phi - 0) < 0.1 || Math.abs(phi - 360) < 0.1;
+
+        const thetaClass = !isElZero ? "warning-text" : "";
+        const phiClass = !isAzZero ? "warning-text" : "";
+
+        // 总是显示校准框
+        calibrationBox.style.display = "block";
+
+        const tRaw = metaData.rawStats.theta;
+        const pRaw = metaData.rawStats.phi;
+
+        infoBox.style.display = "block";
+        infoBox.innerHTML = `
+            <div class="info-item"><strong>解析统计:</strong> 频率 ${metaData.freqMhz} MHz, 数据点 ${processedData.length}</div>
+            
+            <div class="info-item">
+                <strong>输入文件范围 (原始):</strong><br>
+                Theta: [${tRaw.min}, ${tRaw.max}] (步进 ${tRaw.step})<br>
+                Phi&nbsp;&nbsp;&nbsp;: [${pRaw.min}, ${pRaw.max}] (步进 ${pRaw.step})
+            </div>
+
+            <hr style="border:0; border-top:1px solid #ddd; margin:8px 0;">
+
+            <div class="info-item">
+                <strong>最大增益 (原始位置):</strong> ${val} dB at 
+                Theta = <span class="${thetaClass}">${theta.toFixed(2)}°</span>, 
+                Phi = <span class="${phiClass}">${phi.toFixed(2)}°</span>
+            </div>
+        `;
+    }
+
+    function getUniqueValues(key) {
+        const set = new Set();
+        processedData.forEach(d => set.add(d[key]));
+        return Array.from(set).sort((a, b) => a - b);
+    }
+
+    function updateAngleOptions() {
+        const type = patternTypeSelect.value;
+        const currentSelection = angleSelect.value;
+
+        angleSelect.innerHTML = '';
+        const optAll = document.createElement('option');
+        optAll.value = "ALL";
+        optAll.textContent = "导出所有 (合并单文件)";
+        angleSelect.appendChild(optAll);
+
+        let values = [];
+        let labelUnit = "";
+
+        if (type === 'azimuth') {
+            values = getUniqueValues('theta');
+            descText.textContent = "Azimuth 模式：固定 Theta，输出随 Phi 变化的数据。";
+            labelUnit = "Theta = ";
+        } else {
+            values = getUniqueValues('phi');
+            descText.textContent = "Elevation 模式：固定 Phi，输出随 Theta 变化的数据。";
+            labelUnit = "Phi = ";
+        }
+
+        let foundPrev = false;
+        values.forEach(val => {
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = `${labelUnit}${val.toFixed(2)} deg`;
+            angleSelect.appendChild(option);
+            if (val.toString() === currentSelection) foundPrev = true;
+        });
+        
+        if (foundPrev && currentSelection !== "ALL") angleSelect.value = currentSelection;
+        else angleSelect.selectedIndex = 0;
+    }
+
+    function fmt(num, width) {
+        let s = num.toFixed(2);
+        while (s.length < width) s = " " + s;
+        return s;
+    }
+    
+    function fmtInt(num, width) {
+        let s = Math.round(num).toString();
+        while (s.length < width) s = " " + s;
+        return s;
+    }
+
+    function generateGlobalHeader() {
+        let h = "";
+        h += "                      ffe2fftab_v0.5 by BG5TOX\r\n\r\n";
+        h += `${metaData.baseFilename}, Converted from FEKO\r\n\r\n`;
+        h += "         --------------- FAR-FIELD PATTERN DATA ---------------\r\n\r\n";
+        h += `Frequency = ${metaData.freqMhz} Mhz\r\n\r\n`;
+        h += "   Reference = 0 dBi\r\n\r\n";
+        return h;
+    }
+
+    function generateSliceHeader(fixedAngleVal, type) {
+        let h = "";
+        let fixedLabel = "";
+        let patternName = "";
+        let varyColName = "";
+
+        if (type === 'azimuth') {
+            fixedLabel = `Theta angle = ${fixedAngleVal} deg`;
+            patternName = "Azimuth Pattern";
+            varyColName = "Deg"; 
+        } else {
+            fixedLabel = `Phi angle = ${fixedAngleVal} deg`;
+            patternName = "Elevation Pattern";
+            varyColName = "Deg";
+        }
+        
+        h += `${patternName}   ${fixedLabel}\r\n`;
+        h += `${varyColName}    V dB      H dB      Tot dB\r\n`;
+        return h;
+    }
+
+    function getSliceDataLines(fixedAngleVal, type) {
+        let cutData = [];
+        if (type === 'azimuth') {
+            // Azimuth mode: Fix Theta, Sort by Phi
+            cutData = processedData.filter(d => Math.abs(d.theta - fixedAngleVal) < 0.001);
+            cutData.sort((a, b) => a.phi - b.phi);
+            
+            // [FIX FOR DUPLICATE 270]: 去重
+            const uniqueAz = [];
+            if (cutData.length > 0) {
+                uniqueAz.push(cutData[0]);
+                for (let i = 1; i < cutData.length; i++) {
+                    if (Math.abs(cutData[i].phi - cutData[i-1].phi) > 0.001) {
+                        uniqueAz.push(cutData[i]);
+                    }
+                }
+                cutData = uniqueAz;
+            }
+
+            // [FIX FOR MISSING 360]: 补全
+            if (cutData.length > 0) {
+                const hasZero = Math.abs(cutData[0].phi) < 0.001;
+                const lastPhi = cutData[cutData.length - 1].phi;
+                const has360 = Math.abs(lastPhi - 360) < 0.001;
+
+                if (hasZero && !has360) {
+                    const zeroData = cutData[0];
+                    const data360 = {
+                        ...zeroData,
+                        phi: 360.0
+                    };
+                    cutData.push(data360);
+                }
+            }
+
+        } else {
+            // Elevation mode logic
+            cutData = processedData.filter(d => {
+                const isPhiMatch = Math.abs(d.phi - fixedAngleVal) < 0.001;
+                const isPole = (d.theta < 0.001 || Math.abs(d.theta - 180) < 0.001);
+                return isPhiMatch || isPole;
+            });
+            
+            cutData.sort((a, b) => a.theta - b.theta);
+
+            const uniqueData = [];
+            if (cutData.length > 0) {
+                uniqueData.push(cutData[0]);
+                for (let i = 1; i < cutData.length; i++) {
+                    const prev = uniqueData[uniqueData.length - 1];
+                    const curr = cutData[i];
+                    if (Math.abs(curr.theta - prev.theta) > 0.001) {
+                        uniqueData.push(curr);
+                    }
+                }
+                cutData = uniqueData;
+            }
+        }
+
+        if (cutData.length === 0) return "";
+
+        let lines = "";
+        cutData.forEach(d => {
+            let degVal = (type === 'azimuth') ? d.phi : d.theta;
+            const sDeg = fmtInt(degVal, 3);
+            const sV = fmt(d.gainV, 9);
+            const sH = fmt(d.gainH, 10);
+            const sTot = fmt(d.gainTot, 10);
+            lines += `${sDeg}${sV}${sH}${sTot}\r\n`;
+        });
+        
+        lines += "\r\n"; // Trailing newline
+        return lines;
+    }
+
+    async function handleDownload() {
+        const type = patternTypeSelect.value;
+        const selectedVal = angleSelect.value;
+        
+        convertBtn.disabled = true;
+        loadingText.style.display = 'block';
+
+        await new Promise(r => setTimeout(r, 50));
+
+        try {
+            if (selectedVal === "ALL") {
+                downloadCombined(type);
+            } else {
+                downloadSingle(parseFloat(selectedVal), type);
+            }
+        } catch (e) {
+            alert("错误: " + e.message);
+        } finally {
+            convertBtn.disabled = false;
+            loadingText.style.display = 'none';
+        }
+    }
+
+    function downloadSingle(angle, type) {
+        let content = generateGlobalHeader();
+        content += generateSliceHeader(angle, type);
+        
+        const dataStr = getSliceDataLines(angle, type);
+        if (!dataStr || dataStr.trim() === "") {
+            alert("该角度无数据");
+            return;
+        }
+        content += dataStr;
+
+        const tag = (type === 'azimuth') ? "Theta" : "Phi";
+        let suffix = (checkZeroAzimuth.checked || checkZeroElevation.checked) ? "_Aligned" : "";
+        const filename = `${metaData.baseFilename}_${type}_${tag}_${angle}${suffix}.txt`;
+
+        triggerDownload(content, filename);
+    }
+
+    function downloadCombined(type) {
+        let values = [];
+        if (type === 'azimuth') values = getUniqueValues('theta');
+        else values = getUniqueValues('phi');
+
+        let combinedContent = generateGlobalHeader();
+        
+        let count = 0;
+        values.forEach((val) => {
+            const dataStr = getSliceDataLines(val, type);
+            if (dataStr && dataStr.trim() !== "") {
+                combinedContent += generateSliceHeader(val, type);
+                combinedContent += dataStr;
+                count++;
+            }
+        });
+
+        if (count === 0) {
+            alert("无有效数据可导出");
+            return;
+        }
+
+        let suffix = (checkZeroAzimuth.checked || checkZeroElevation.checked) ? "_Aligned" : "";
+        const filename = `${metaData.baseFilename}_${type}_All${suffix}.txt`;
+        
+        triggerDownload(combinedContent, filename);
+    }
+
+    function triggerDownload(content, filename) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>
